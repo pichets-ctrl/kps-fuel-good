@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: อ่านได้ทุกคนที่ล็อกอิน, แก้ไขได้เฉพาะเจ้าของ
+    match /users/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Stations: อ่านได้ทุกคน, สร้างได้เมื่อล็อกอิน, แก้ไข/ลบได้เฉพาะเจ้าของหรือ admin
+    match /stations/{stationId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid;
+
+      allow update: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+
+      allow delete: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // Fuel Updates (audit log): อ่านได้เมื่อล็อกอิน, สร้างได้เมื่อล็อกอิน
+    match /fuelUpdates/{updateId} {
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null;
+    }
+  }
+}

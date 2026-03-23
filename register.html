@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ลงทะเบียนปั๊มน้ำมัน – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #location-picker { height: 320px; border-radius: var(--radius-sm); overflow: hidden; border: 1.5px solid var(--border); margin-top: 0.5rem; }
+    #location-picker:hover { border-color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+    <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+    <div data-auth="userinfo" class="flex gap-1" style="display:none;align-items:center"></div>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+  <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+  <a href="#" data-action="logout" class="nav-link">🚪 ออกจากระบบ</a>
+</div>
+
+<div class="page-wrapper">
+<div class="section">
+<div class="container-sm">
+
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">➕ ลงทะเบียนปั๊มน้ำมัน</h1>
+    <p class="dashboard-subtitle">กรอกข้อมูลปั๊มน้ำมันของคุณให้ครบถ้วน</p>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="steps" id="step-indicator">
+    <div class="step active" id="step-1">
+      <div class="step-circle">1</div>
+      <span class="step-label">ข้อมูลทั่วไป</span>
+      <div class="step-line"></div>
+    </div>
+    <div class="step" id="step-2">
+      <div class="step-circle">2</div>
+      <span class="step-label">ที่ตั้ง</span>
+      <div class="step-line"></div>
+    </div>
+    <div class="step" id="step-3">
+      <div class="step-circle">3</div>
+      <span class="step-label">สต๊อกน้ำมัน</span>
+      <div class="step-line"></div>
+    </div>
+    <div class="step" id="step-4">
+      <div class="step-circle">4</div>
+      <span class="step-label">ยืนยัน</span>
+    </div>
+  </div>
+
+  <div id="register-alert" style="display:none" class="mt-2"></div>
+
+  <form id="register-form" novalidate>
+
+    <!-- ===== STEP 1: ข้อมูลทั่วไป ===== -->
+    <div id="form-step-1">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📋 ข้อมูลทั่วไป</h3>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ชื่อปั๊มน้ำมัน <span class="required">*</span></label>
+          <input type="text" class="form-control" id="name" name="name"
+                 placeholder="เช่น ปั๊ม PTT สาขากำแพงแสน" required>
+          <div class="invalid-feedback">กรุณากรอกชื่อปั๊มน้ำมัน</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">แบรนด์ / สังกัด <span class="required">*</span></label>
+            <select class="form-control" id="brand" name="brand" required>
+              <option value="">— เลือกแบรนด์ —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">เวลาเปิด – ปิด</label>
+            <div class="flex gap-1">
+              <input type="time" class="form-control" id="open-time" value="06:00" style="flex:1">
+              <input type="time" class="form-control" id="close-time" value="22:00" style="flex:1">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">คำอธิบายปั๊ม</label>
+          <textarea class="form-control" id="description" name="description"
+                    placeholder="บริการพิเศษ จุดเด่น หรือข้อมูลเพิ่มเติม..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">เบอร์โทรศัพท์ <span class="required">*</span></label>
+            <input type="tel" class="form-control" id="phone" name="phone"
+                   placeholder="0xx-xxxxxxx" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">อีเมล</label>
+            <input type="email" class="form-control" id="email-contact" name="email"
+                   placeholder="station@example.com">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Line ID</label>
+            <input type="text" class="form-control" id="line-id" placeholder="@lineid">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Facebook</label>
+            <input type="text" class="form-control" id="facebook" placeholder="ชื่อเพจ Facebook">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">เว็บไซต์</label>
+          <input type="url" class="form-control" id="website" placeholder="https://...">
+        </div>
+
+        <div style="text-align:right;margin-top:0.5rem">
+          <button type="button" class="btn btn-primary" id="btn-next-1">ถัดไป: ที่ตั้ง →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 2: ที่ตั้ง ===== -->
+    <div id="form-step-2" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📍 ตำแหน่งที่ตั้ง</h3>
+        </div>
+
+        <div class="alert alert-info mb-2">
+          🖱️ คลิ๊กบนแผนที่เพื่อปักหมุดตำแหน่งปั๊มน้ำมันของคุณ ระบบจะดึงที่อยู่ให้อัตโนมัติ
+        </div>
+
+        <div id="location-picker"></div>
+
+        <div class="form-group mt-2">
+          <label class="form-label">ที่อยู่ <span class="required">*</span></label>
+          <input type="text" class="form-control" id="address" required
+                 placeholder="เลขที่ ถนน หมู่บ้าน">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ตำบล / แขวง</label>
+            <input type="text" class="form-control" id="subdistrict">
+          </div>
+          <div class="form-group">
+            <label class="form-label">อำเภอ / เขต <span class="required">*</span></label>
+            <input type="text" class="form-control" id="district" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">จังหวัด <span class="required">*</span></label>
+            <select class="form-control" id="province" required>
+              <option value="">— เลือกจังหวัด —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสไปรษณีย์</label>
+            <input type="text" class="form-control" id="postal-code" maxlength="5" placeholder="73000">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ละติจูด</label>
+            <input type="number" class="form-control" id="lat" step="any" readonly
+                   placeholder="คลิ๊กบนแผนที่">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ลองจิจูด</label>
+            <input type="number" class="form-control" id="lng" step="any" readonly
+                   placeholder="คลิ๊กบนแผนที่">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;justify-content:space-between;margin-top:0.5rem;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline" id="btn-back-1">← ย้อนกลับ</button>
+          <button type="button" class="btn btn-primary" id="btn-next-2">ถัดไป: สต๊อกน้ำมัน →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 3: สต๊อกน้ำมัน ===== -->
+    <div id="form-step-3" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">⛽ ข้อมูลสต๊อกน้ำมัน (เปอร์เซ็นต์เริ่มต้น)</h3>
+        </div>
+
+        <div class="alert alert-info mb-2">
+          ℹ️ ตั้งค่า 0% หมายถึง "ไม่มีบริการ" สำหรับน้ำมันชนิดนั้น สามารถอัปเดตได้ตลอดเวลาในแดชบอร์ด
+        </div>
+
+        <div class="fuel-stock-grid" id="reg-fuel-sliders"></div>
+
+        <div style="display:flex;gap:0.75rem;justify-content:space-between;margin-top:1.5rem;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline" id="btn-back-2">← ย้อนกลับ</button>
+          <button type="button" class="btn btn-primary" id="btn-next-3">ถัดไป: ยืนยัน →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 4: ยืนยัน ===== -->
+    <div id="form-step-4" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">✅ ตรวจสอบและยืนยันข้อมูล</h3>
+        </div>
+
+        <div id="review-content" style="font-size:0.9rem"></div>
+
+        <div style="display:flex;gap:0.75rem;justify-content:space-between;margin-top:1.5rem;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline" id="btn-back-3">← ย้อนกลับ</button>
+          <button type="submit" class="btn btn-primary btn-lg" id="btn-submit">
+            ✅ ยืนยันลงทะเบียน
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+</div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase + Leaflet -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let currentUser = null;
+let pickerMap   = null;
+let pickedLocation = {};
+let currentStep = 1;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await Auth.requireAuth('login.html');
+
+  // Populate brand select
+  const brandSel = document.getElementById('brand');
+  DB.BRANDS.forEach(b => {
+    const o = document.createElement('option'); o.value = b; o.textContent = b;
+    brandSel.appendChild(o);
+  });
+
+  // Populate province select
+  const provSel = document.getElementById('province');
+  DB.PROVINCES.forEach(p => {
+    const o = document.createElement('option'); o.value = p; o.textContent = p;
+    provSel.appendChild(o);
+  });
+
+  // Build fuel sliders
+  buildFuelSliders();
+
+  // Step navigation
+  document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
+  document.getElementById('btn-back-1').addEventListener('click', () => goToStep(1));
+  document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
+  document.getElementById('btn-back-2').addEventListener('click', () => goToStep(2));
+  document.getElementById('btn-next-3').addEventListener('click', () => goToStep(4));
+  document.getElementById('btn-back-3').addEventListener('click', () => goToStep(3));
+
+  // Submit
+  document.getElementById('register-form').addEventListener('submit', handleSubmit);
+});
+
+function goToStep(step) {
+  // Validate current step
+  if (step > currentStep) {
+    if (currentStep === 1 && !validateStep1()) return;
+    if (currentStep === 2 && !validateStep2()) return;
+  }
+
+  // Show/hide steps
+  [1,2,3,4].forEach(s => {
+    document.getElementById(`form-step-${s}`).style.display = s === step ? '' : 'none';
+  });
+
+  // Update step indicator
+  [1,2,3,4].forEach(s => {
+    const el = document.getElementById(`step-${s}`);
+    el.classList.remove('active', 'done');
+    if (s < step)  el.classList.add('done');
+    if (s === step) el.classList.add('active');
+  });
+
+  currentStep = step;
+
+  // Init map on step 2
+  if (step === 2 && !pickerMap) {
+    setTimeout(() => {
+      pickerMap = MapModule.initPicker('location-picker', onLocationPicked);
+    }, 100);
+  }
+
+  // Build review on step 4
+  if (step === 4) buildReview();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep1() {
+  const name  = document.getElementById('name').value.trim();
+  const brand = document.getElementById('brand').value;
+  const phone = document.getElementById('phone').value.trim();
+
+  if (!name)  { Toast.show('กรุณากรอกชื่อปั๊มน้ำมัน', 'warning'); return false; }
+  if (!brand) { Toast.show('กรุณาเลือกแบรนด์', 'warning'); return false; }
+  if (!phone) { Toast.show('กรุณากรอกเบอร์โทรศัพท์', 'warning'); return false; }
+  return true;
+}
+
+function validateStep2() {
+  if (!pickedLocation.lat) { Toast.show('กรุณาคลิ๊กบนแผนที่เพื่อระบุตำแหน่ง', 'warning'); return false; }
+  if (!document.getElementById('address').value.trim()) { Toast.show('กรุณากรอกที่อยู่', 'warning'); return false; }
+  if (!document.getElementById('province').value)      { Toast.show('กรุณาเลือกจังหวัด', 'warning'); return false; }
+  return true;
+}
+
+function onLocationPicked(loc) {
+  pickedLocation = loc;
+  document.getElementById('lat').value         = loc.lat.toFixed(6);
+  document.getElementById('lng').value         = loc.lng.toFixed(6);
+  document.getElementById('address').value     = loc.address     || document.getElementById('address').value;
+  document.getElementById('subdistrict').value = loc.subdistrict || document.getElementById('subdistrict').value;
+  document.getElementById('district').value    = loc.district    || document.getElementById('district').value;
+  document.getElementById('postal-code').value = loc.postalCode  || document.getElementById('postal-code').value;
+
+  if (loc.province) {
+    const sel = document.getElementById('province');
+    for (const opt of sel.options) {
+      if (opt.value === loc.province || loc.province.includes(opt.value)) {
+        sel.value = opt.value; break;
+      }
+    }
+  }
+  Toast.show('บันทึกตำแหน่งเรียบร้อย', 'success');
+}
+
+function buildFuelSliders() {
+  const container = document.getElementById('reg-fuel-sliders');
+  container.innerHTML = DB.FUEL_TYPES.map(fuel => `
+    <div class="fuel-stock-item">
+      <label>
+        <span class="fuel-dot" style="background:${fuel.color}"></span>
+        ${fuel.label}
+      </label>
+      <div class="range-with-value">
+        <input type="range" id="fuel-${fuel.key}" min="0" max="100" step="5" value="0">
+        <span class="range-val fuel-empty" id="fuel-${fuel.key}-val">0%</span>
+      </div>
+    </div>`).join('');
+  initRangeInputs();
+}
+
+function buildReview() {
+  const fuelSummary = DB.FUEL_TYPES
+    .map(f => {
+      const v = parseInt(document.getElementById(`fuel-${f.key}`).value);
+      if (v === 0) return null;
+      const cls = DB.getFuelPercent(v);
+      return `<span class="mini-fuel-badge fuel-${cls}" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}55">${f.shortLabel} ${v}%</span>`;
+    })
+    .filter(Boolean).join(' ');
+
+  document.getElementById('review-content').innerHTML = `
+    <div style="display:grid;gap:1rem">
+      <div style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:1rem">
+        <div class="text-gold font-bold mb-1">📋 ข้อมูลทั่วไป</div>
+        <div><b>ชื่อ:</b> ${document.getElementById('name').value}</div>
+        <div><b>แบรนด์:</b> ${document.getElementById('brand').value}</div>
+        <div><b>โทร:</b> ${document.getElementById('phone').value}</div>
+        <div><b>เวลา:</b> ${document.getElementById('open-time').value} – ${document.getElementById('close-time').value}</div>
+      </div>
+      <div style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:1rem">
+        <div class="text-gold font-bold mb-1">📍 ที่ตั้ง</div>
+        <div>${document.getElementById('address').value}</div>
+        <div>${document.getElementById('subdistrict').value} ${document.getElementById('district').value} ${document.getElementById('province').value}</div>
+        <div style="color:var(--text-muted);font-size:0.8rem">(${pickedLocation.lat?.toFixed(5)}, ${pickedLocation.lng?.toFixed(5)})</div>
+      </div>
+      <div style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:1rem">
+        <div class="text-gold font-bold mb-1">⛽ สต๊อกน้ำมัน</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.5rem">
+          ${fuelSummary || '<span style="color:var(--text-muted)">ยังไม่ตั้งค่าสต๊อก</span>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  const fuelStock = {};
+  DB.FUEL_TYPES.forEach(f => {
+    fuelStock[f.key] = parseInt(document.getElementById(`fuel-${f.key}`).value);
+  });
+
+  const stationData = {
+    name:        document.getElementById('name').value.trim(),
+    brand:       document.getElementById('brand').value,
+    description: document.getElementById('description').value.trim(),
+    location: {
+      lat:         parseFloat(document.getElementById('lat').value),
+      lng:         parseFloat(document.getElementById('lng').value),
+      address:     document.getElementById('address').value.trim(),
+      subdistrict: document.getElementById('subdistrict').value.trim(),
+      district:    document.getElementById('district').value.trim(),
+      province:    document.getElementById('province').value,
+      postalCode:  document.getElementById('postal-code').value.trim()
+    },
+    contact: {
+      phone:   document.getElementById('phone').value.trim(),
+      email:   document.getElementById('email-contact').value.trim(),
+      lineId:  document.getElementById('line-id').value.trim(),
+      facebook:document.getElementById('facebook').value.trim(),
+      website: document.getElementById('website').value.trim()
+    },
+    openHours: {
+      open:  document.getElementById('open-time').value,
+      close: document.getElementById('close-time').value
+    },
+    fuelStock
+  };
+
+  Loader.show('กำลังลงทะเบียน...');
+  const result = await DB.createStation(stationData, currentUser.uid);
+  Loader.hide();
+
+  const alertEl = document.getElementById('register-alert');
+  if (result.success) {
+    alertEl.className = 'alert alert-success';
+    alertEl.innerHTML = `✅ ลงทะเบียนปั๊มน้ำมันเรียบร้อยแล้ว! รหัส: <b>${result.id}</b><br>
+      <a href="station.html?id=${result.id}" class="btn btn-sm btn-primary mt-2">ดูหน้าปั๊ม →</a>
+      &nbsp;<a href="dashboard.html" class="btn btn-sm btn-outline mt-2">กลับแดชบอร์ด</a>`;
+    alertEl.style.display = 'flex';
+    document.getElementById('register-form').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    alertEl.className = 'alert alert-error';
+    alertEl.innerHTML = `❌ เกิดข้อผิดพลาด: ${result.error}`;
+    alertEl.style.display = 'flex';
+  }
+}
+</script>
+
+</body>
+</html>

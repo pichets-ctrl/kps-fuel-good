@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายการปั๊มน้ำมัน – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="index.html"       class="nav-link">🗺️ แผนที่</a>
+    <a href="station-list.html" class="nav-link active">📋 รายการปั๊ม</a>
+    <a href="dashboard.html"   class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ด</a>
+    <a href="login.html"       class="btn-nav-login" data-auth="login">เข้าสู่ระบบ</a>
+    <div data-auth="userinfo"  class="flex gap-1" style="display:none;align-items:center"></div>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html"       class="nav-link">🗺️ แผนที่</a>
+  <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+  <a href="dashboard.html"   class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ด</a>
+  <a href="login.html"       class="nav-link" data-auth="login">🔑 เข้าสู่ระบบ</a>
+  <a href="#" data-action="logout" class="nav-link" data-auth="logout" style="display:none">🚪 ออกจากระบบ</a>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- Page Header -->
+  <div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));padding:2.5rem 1.5rem 2rem;border-bottom:2px solid var(--gold)">
+    <div class="container">
+      <h1 style="font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;color:var(--text-light);margin-bottom:0.5rem">
+        📋 รายการปั๊มน้ำมันทั้งหมด
+      </h1>
+      <p style="color:var(--text-muted)">ปั๊มน้ำมันที่ลงทะเบียนในระบบ KPS Fuel Good</p>
+    </div>
+  </div>
+
+  <div class="section">
+  <div class="container">
+
+    <!-- Filters -->
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin-bottom:1.5rem;background:var(--bg-card);padding:1rem;border-radius:var(--radius);border:1px solid var(--border)">
+      <input type="text" id="search-input" class="form-control"
+             placeholder="🔍 ค้นหาชื่อปั๊ม..." style="flex:1;min-width:160px">
+
+      <select id="province-filter" class="form-control" style="width:auto;min-width:140px">
+        <option value="">ทุกจังหวัด</option>
+      </select>
+
+      <select id="brand-filter" class="form-control" style="width:auto">
+        <option value="">ทุกแบรนด์</option>
+      </select>
+
+      <select id="fuel-filter" class="form-control" style="width:auto;min-width:150px">
+        <option value="">ทุกประเภทน้ำมัน</option>
+      </select>
+
+      <select id="sort-filter" class="form-control" style="width:auto">
+        <option value="name">เรียงตามชื่อ</option>
+        <option value="stock-asc">สต๊อกน้อย → มาก</option>
+        <option value="stock-desc">สต๊อกมาก → น้อย</option>
+        <option value="verified">ยืนยันแล้ว</option>
+      </select>
+
+      <button class="btn btn-outline btn-sm" id="btn-clear-filters">✕ ล้าง</button>
+    </div>
+
+    <!-- Result count -->
+    <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1rem" id="result-count"></div>
+
+    <!-- Grid -->
+    <div class="station-grid" id="station-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">
+        <div class="spinner" style="margin:0 auto 1rem"></div>
+        กำลังโหลด...
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div style="text-align:center;margin-top:2rem" id="load-more-container" style="display:none">
+      <button class="btn btn-outline" id="btn-load-more">โหลดเพิ่มเติม</button>
+    </div>
+
+  </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">⛽ KPS Fuel Good</div>
+    <div class="footer-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน มหาวิทยาลัยเกษตรศาสตร์</div>
+  </footer>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+const PAGE_SIZE = 12;
+let allStations = [];
+let filtered    = [];
+let page        = 1;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Populate dropdowns
+  DB.PROVINCES.forEach(p => {
+    const o = document.createElement('option'); o.value = p; o.textContent = p;
+    document.getElementById('province-filter').appendChild(o);
+  });
+  DB.BRANDS.forEach(b => {
+    const o = document.createElement('option'); o.value = b; o.textContent = b;
+    document.getElementById('brand-filter').appendChild(o);
+  });
+  DB.FUEL_TYPES.forEach(f => {
+    const o = document.createElement('option'); o.value = f.key; o.textContent = f.label;
+    document.getElementById('fuel-filter').appendChild(o);
+  });
+
+  // Load stations
+  try {
+    allStations = await DB.getStations();
+    if (!allStations.length) allStations = DB.getDemoStations();
+  } catch {
+    allStations = DB.getDemoStations();
+  }
+
+  applyFilters();
+
+  // Filter listeners
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('province-filter').addEventListener('change', applyFilters);
+  document.getElementById('brand-filter').addEventListener('change', applyFilters);
+  document.getElementById('fuel-filter').addEventListener('change', applyFilters);
+  document.getElementById('sort-filter').addEventListener('change', applyFilters);
+  document.getElementById('btn-clear-filters').addEventListener('click', clearFilters);
+  document.getElementById('btn-load-more').addEventListener('click', loadMore);
+});
+
+function applyFilters() {
+  const q        = document.getElementById('search-input').value.toLowerCase().trim();
+  const province = document.getElementById('province-filter').value;
+  const brand    = document.getElementById('brand-filter').value;
+  const fuel     = document.getElementById('fuel-filter').value;
+  const sort     = document.getElementById('sort-filter').value;
+
+  filtered = allStations.filter(s => {
+    if (q && !s.name?.toLowerCase().includes(q) &&
+             !s.location?.address?.toLowerCase().includes(q)) return false;
+    if (province && s.location?.province !== province) return false;
+    if (brand    && s.brand !== brand) return false;
+    if (fuel     && !(s.fuelStock?.[fuel] > 0)) return false;
+    return true;
+  });
+
+  // Sort
+  if (sort === 'name') {
+    filtered.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'th'));
+  } else if (sort === 'stock-asc') {
+    filtered.sort((a,b) => getMinStock(a) - getMinStock(b));
+  } else if (sort === 'stock-desc') {
+    filtered.sort((a,b) => getMinStock(b) - getMinStock(a));
+  } else if (sort === 'verified') {
+    filtered.sort((a,b) => (b.isVerified ? 1 : 0) - (a.isVerified ? 1 : 0));
+  }
+
+  page = 1;
+  renderPage();
+}
+
+function getMinStock(station) {
+  if (!station.fuelStock) return 999;
+  const vals = Object.values(station.fuelStock).filter(v => v > 0);
+  return vals.length ? Math.min(...vals) : 999;
+}
+
+function renderPage() {
+  const grid = document.getElementById('station-grid');
+  const slice = filtered.slice(0, page * PAGE_SIZE);
+
+  document.getElementById('result-count').textContent =
+    `แสดง ${Math.min(slice.length, filtered.length)} จาก ${filtered.length} ปั๊ม`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">
+        <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+        <p>ไม่พบปั๊มน้ำมันที่ตรงกับเงื่อนไข</p>
+        <button class="btn btn-outline mt-2" onclick="clearFilters()">ล้างตัวกรอง</button>
+      </div>`;
+    document.getElementById('load-more-container').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = slice.map(s => stationCard(s)).join('');
+
+  const loadMoreContainer = document.getElementById('load-more-container');
+  loadMoreContainer.style.display = filtered.length > page * PAGE_SIZE ? 'block' : 'none';
+}
+
+function loadMore() {
+  page++;
+  renderPage();
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value    = '';
+  document.getElementById('province-filter').value = '';
+  document.getElementById('brand-filter').value    = '';
+  document.getElementById('fuel-filter').value     = '';
+  document.getElementById('sort-filter').value     = 'name';
+  applyFilters();
+}
+
+function stationCard(s) {
+  const fuels = DB.FUEL_TYPES
+    .filter(f => s.fuelStock && (s.fuelStock[f.key] ?? -1) >= 0)
+    .slice(0, 4)
+    .map(f => DB.renderFuelBadge(f.key, s.fuelStock[f.key]))
+    .join('');
+
+  const minStock = s.fuelStock
+    ? Math.min(...Object.values(s.fuelStock).filter(v => v > 0))
+    : null;
+
+  const stockAlert = minStock !== null && minStock <= 25
+    ? `<div style="font-size:0.75rem;color:#FF5722;margin-top:0.35rem">⚠️ สต๊อกต่ำ</div>`
+    : '';
+
+  return `
+    <a href="station.html?id=${s.id}" class="station-card" style="text-decoration:none">
+      <div class="station-card-header">
+        <div>
+          <div class="station-name">${s.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem">
+            📍 ${s.location?.district || ''}, ${s.location?.province || ''}
+          </div>
+          ${stockAlert}
+        </div>
+        <span class="station-brand-badge">${s.brand || 'อิสระ'}</span>
+      </div>
+      <div class="station-card-body">
+        <div class="station-fuels-mini">
+          ${fuels || '<span style="color:var(--text-muted);font-size:0.8rem">ยังไม่มีข้อมูล</span>'}
+        </div>
+      </div>
+      <div class="station-card-footer">
+        <div class="station-status">
+          <div class="status-dot ${s.isActive ? 'online' : 'offline'}"></div>
+          <span style="font-size:0.8rem;color:var(--text-muted)">${s.isActive ? 'เปิด' : 'ปิด'}</span>
+        </div>
+        ${s.isVerified
+          ? '<span class="badge badge-success">✓ ยืนยัน</span>'
+          : '<span class="badge badge-warning">รอยืนยัน</span>'}
+      </div>
+    </a>`;
+}
+</script>
+
+</body>
+</html>

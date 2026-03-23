@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายละเอียดปั๊มน้ำมัน – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #station-mini-map { height: 260px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+    <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+    <a href="dashboard.html" class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ด</a>
+    <a href="login.html" class="btn-nav-login" data-auth="login">เข้าสู่ระบบ</a>
+    <div data-auth="userinfo" class="flex gap-1" style="display:none;align-items:center"></div>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+  <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+  <a href="dashboard.html" class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ด</a>
+  <a href="login.html" class="nav-link" data-auth="login">🔑 เข้าสู่ระบบ</a>
+</div>
+
+<div class="page-wrapper">
+  <!-- Loading state -->
+  <div id="station-loading" style="text-align:center;padding:5rem;color:var(--text-muted)">
+    <div class="spinner" style="margin:0 auto 1rem"></div>
+    กำลังโหลดข้อมูลปั๊มน้ำมัน...
+  </div>
+
+  <!-- Error state -->
+  <div id="station-error" style="display:none;text-align:center;padding:5rem">
+    <div style="font-size:3rem;margin-bottom:1rem">❌</div>
+    <h2 style="color:var(--gold)">ไม่พบปั๊มน้ำมัน</h2>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem">รหัสปั๊มน้ำมันไม่ถูกต้อง หรืออาจถูกลบออกจากระบบแล้ว</p>
+    <a href="index.html" class="btn btn-primary">← กลับหน้าหลัก</a>
+  </div>
+
+  <!-- Station content -->
+  <div id="station-content" style="display:none">
+
+    <!-- Hero Banner -->
+    <div id="station-hero" style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));padding:2.5rem 1.5rem;border-bottom:2px solid var(--gold)">
+      <div class="container">
+        <div style="display:flex;align-items:flex-start;gap:1.25rem;flex-wrap:wrap">
+          <div style="width:64px;height:64px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;color:var(--primary-dark);flex-shrink:0">
+            ⛽
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem">
+              <h1 id="s-name" style="font-size:clamp(1.3rem,4vw,2rem);font-weight:800;color:var(--text-light)"></h1>
+              <span id="s-brand-badge" class="station-brand-badge"></span>
+              <span id="s-verified-badge" style="display:none" class="badge badge-success">✓ ยืนยันแล้ว</span>
+            </div>
+            <p id="s-address" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:0.75rem"></p>
+            <div id="s-contact-bar" style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.85rem"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;min-width:140px">
+            <div id="s-status" class="badge"></div>
+            <div id="s-open-hours" style="color:var(--text-muted);font-size:0.8rem"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:2rem;align-items:start" id="station-grid-layout">
+
+        <!-- LEFT COLUMN -->
+        <div>
+          <!-- Breadcrumb -->
+          <div style="margin-bottom:1.5rem;font-size:0.85rem;color:var(--text-muted)">
+            <a href="index.html">หน้าหลัก</a> › <a href="station-list.html">รายการปั๊ม</a> › <span id="s-name-bc" style="color:var(--text-light)"></span>
+          </div>
+
+          <!-- Fuel Stock -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h2 class="card-title">⛽ สต๊อกน้ำมัน</h2>
+              <span id="s-updated-at" style="font-size:0.75rem;color:var(--text-muted)"></span>
+            </div>
+            <div class="fuel-grid" id="fuel-display"></div>
+          </div>
+
+          <!-- Description -->
+          <div class="card mb-3" id="desc-card">
+            <div class="card-header">
+              <h2 class="card-title">📋 เกี่ยวกับปั๊มนี้</h2>
+            </div>
+            <p id="s-description" style="color:var(--text-muted);font-size:0.95rem;line-height:1.8"></p>
+          </div>
+
+          <!-- Admin actions (only visible to owner) -->
+          <div id="owner-actions" style="display:none" class="card">
+            <div class="card-header">
+              <h2 class="card-title">🔧 จัดการปั๊มของคุณ</h2>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+              <a href="#" id="btn-edit-station" class="btn btn-outline">✏️ แก้ไขข้อมูล</a>
+              <a href="dashboard.html#fuel-update" class="btn btn-primary">🔄 อัปเดตสต๊อก</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+          <!-- Map -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3 class="card-title">📍 ตำแหน่งที่ตั้ง</h3>
+            </div>
+            <div id="station-mini-map"></div>
+            <div style="margin-top:0.75rem">
+              <a id="link-google-maps" href="#" target="_blank" class="btn btn-outline btn-full btn-sm">
+                🗺️ เปิดใน Google Maps
+              </a>
+            </div>
+          </div>
+
+          <!-- Contact -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3 class="card-title">📞 ช่องทางติดต่อ</h3>
+            </div>
+            <div id="s-contact-detail" style="display:grid;gap:0.6rem;font-size:0.875rem"></div>
+          </div>
+
+          <!-- Share -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📤 แชร์</h3>
+            </div>
+            <button class="btn btn-outline btn-full btn-sm" id="btn-share">
+              📋 คัดลอกลิ๊งค์
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-brand">⛽ KPS Fuel Good</div>
+    <div class="footer-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน มหาวิทยาลัยเกษตรศาสตร์</div>
+    <div style="color:var(--border);font-size:0.75rem">แผนที่จาก <a href="https://www.openstreetmap.org">OpenStreetMap</a> &copy; contributors</div>
+  </footer>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase + Leaflet -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const stationId = getParam('id');
+
+  if (!stationId) {
+    showError();
+    return;
+  }
+
+  // Load station
+  let station = null;
+  try {
+    station = await DB.getStation(stationId);
+    if (!station) {
+      // Try demo data
+      station = DB.getDemoStations().find(s => s.id === stationId);
+    }
+  } catch (e) {
+    station = DB.getDemoStations().find(s => s.id === stationId);
+  }
+
+  if (!station) { showError(); return; }
+
+  // Render
+  renderStation(station);
+  document.getElementById('station-loading').style.display = 'none';
+  document.getElementById('station-content').style.display = 'block';
+
+  // Init mini map
+  setTimeout(() => {
+    if (station.location?.lat) {
+      const miniMap = L.map('station-mini-map', {
+        center: [station.location.lat, station.location.lng],
+        zoom: 15,
+        zoomControl: true,
+        dragging: true
+      });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(miniMap);
+
+      const icon = MapModule.getBrandColor
+        ? L.divIcon({
+            html: `<div style="width:32px;height:32px;background:${MapModule.getBrandColor(station.brand)};border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.4)">⛽</div>`,
+            className: '', iconSize: [32,32], iconAnchor: [16,16]
+          })
+        : L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25,41], iconAnchor: [12,41] });
+
+      L.marker([station.location.lat, station.location.lng], { icon })
+        .addTo(miniMap)
+        .bindPopup(station.name)
+        .openPopup();
+    }
+  }, 200);
+
+  // Check if owner
+  auth.onAuthStateChanged(user => {
+    if (user && station.ownerId === user.uid) {
+      document.getElementById('owner-actions').style.display = 'block';
+      document.getElementById('btn-edit-station').href = `dashboard.html`;
+    }
+  });
+
+  // Share button
+  document.getElementById('btn-share').addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => Toast.show('คัดลอกลิ๊งค์เรียบร้อย', 'success'))
+      .catch(() => Toast.show('ไม่สามารถคัดลอกได้', 'error'));
+  });
+
+  // Responsive layout
+  checkLayout();
+  window.addEventListener('resize', checkLayout);
+});
+
+function renderStation(s) {
+  // Title
+  document.title = `${s.name} – KPS Fuel Good`;
+  document.getElementById('s-name').textContent    = s.name;
+  document.getElementById('s-name-bc').textContent = s.name;
+  document.getElementById('s-brand-badge').textContent = s.brand || 'อิสระ';
+
+  if (s.isVerified) {
+    document.getElementById('s-verified-badge').style.display = 'inline-flex';
+  }
+
+  // Address
+  const loc = s.location || {};
+  document.getElementById('s-address').textContent =
+    [loc.address, loc.subdistrict, loc.district, loc.province].filter(Boolean).join(', ');
+
+  // Status
+  const statusEl = document.getElementById('s-status');
+  statusEl.className = `badge ${s.isActive !== false ? 'badge-success' : 'badge-danger'}`;
+  statusEl.textContent = s.isActive !== false ? '🟢 เปิดให้บริการ' : '🔴 ปิด';
+
+  // Hours
+  if (s.openHours) {
+    document.getElementById('s-open-hours').textContent =
+      `⏰ ${s.openHours.open || '00:00'} – ${s.openHours.close || '24:00'}`;
+  }
+
+  // Contact bar (hero)
+  const contact = s.contact || {};
+  const contactBar = [];
+  if (contact.phone)   contactBar.push(`📞 <a href="tel:${contact.phone}">${contact.phone}</a>`);
+  if (contact.lineId)  contactBar.push(`💬 Line: ${contact.lineId}`);
+  if (contact.website) contactBar.push(`🌐 <a href="${contact.website}" target="_blank">เว็บไซต์</a>`);
+  document.getElementById('s-contact-bar').innerHTML = contactBar.join('');
+
+  // Contact detail (sidebar)
+  const contactItems = [];
+  if (contact.phone)    contactItems.push(`<div>📞 <a href="tel:${contact.phone}">${contact.phone}</a></div>`);
+  if (contact.email)    contactItems.push(`<div>📧 <a href="mailto:${contact.email}">${contact.email}</a></div>`);
+  if (contact.lineId)   contactItems.push(`<div>💬 Line: <b>${contact.lineId}</b></div>`);
+  if (contact.facebook) contactItems.push(`<div>👥 Facebook: ${contact.facebook}</div>`);
+  if (contact.website)  contactItems.push(`<div>🌐 <a href="${contact.website}" target="_blank">${contact.website}</a></div>`);
+  if (!contactItems.length) contactItems.push('<span style="color:var(--text-muted)">ไม่มีข้อมูลการติดต่อ</span>');
+  document.getElementById('s-contact-detail').innerHTML = contactItems.join('');
+
+  // Google Maps link
+  if (loc.lat && loc.lng) {
+    document.getElementById('link-google-maps').href =
+      `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
+  }
+
+  // Description
+  const descCard = document.getElementById('desc-card');
+  if (s.description) {
+    document.getElementById('s-description').textContent = s.description;
+  } else {
+    descCard.style.display = 'none';
+  }
+
+  // Fuel stock
+  renderFuelGrid('fuel-display', s.fuelStock);
+
+  // Updated at
+  if (s.updatedAt) {
+    document.getElementById('s-updated-at').textContent = 'อัปเดต: ' + formatDate(s.updatedAt);
+  }
+}
+
+function showError() {
+  document.getElementById('station-loading').style.display = 'none';
+  document.getElementById('station-error').style.display = 'block';
+}
+
+function checkLayout() {
+  const layout = document.getElementById('station-grid-layout');
+  if (!layout) return;
+  if (window.innerWidth < 900) {
+    layout.style.gridTemplateColumns = '1fr';
+  } else {
+    layout.style.gridTemplateColumns = '1fr 340px';
+  }
+}
+</script>
+
+</body>
+</html>

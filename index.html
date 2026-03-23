@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPS Fuel Good – แผนที่ปั๊มน้ำมัน</title>
+  <meta name="description" content="แพลตฟอร์มบริหารจัดการปั๊มน้ำมันในประเทศไทย โดย คณะวิศวกรรมศาสตร์ กำแพงแสน">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>
+      KPS Fuel Good
+      <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span>
+    </div>
+  </a>
+
+  <div class="navbar-nav">
+    <a href="index.html"     class="nav-link active">🗺️ แผนที่</a>
+    <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+    <a href="dashboard.html" class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ด</a>
+
+    <!-- Logged out -->
+    <a href="login.html" class="btn-nav-login" data-auth="login">เข้าสู่ระบบ</a>
+
+    <!-- Logged in -->
+    <div data-auth="userinfo" class="flex gap-1" style="display:none;align-items:center"></div>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+
+  <button class="hamburger" id="hamburger" aria-label="เมนู">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html"        class="nav-link">🗺️ แผนที่</a>
+  <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+  <a href="dashboard.html"    class="nav-link" data-auth="required" style="display:none">📊 แดชบอร์ดของฉัน</a>
+  <a href="register.html"     class="nav-link" data-auth="required" style="display:none">➕ ลงทะเบียนปั๊ม</a>
+  <a href="login.html"        class="nav-link" data-auth="login">🔑 เข้าสู่ระบบ</a>
+  <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">🚪 ออกจากระบบ</a>
+</div>
+
+<!-- ===== HERO ===== -->
+<div class="page-wrapper">
+  <section class="hero">
+    <h1 class="hero-title">⛽ KPS Fuel Good</h1>
+    <p class="hero-subtitle">
+      แพลตฟอร์มบริหารจัดการข้อมูลสต๊อกน้ำมันสำหรับปั๊มน้ำมันทั่วประเทศไทย<br>
+      <small style="color:var(--text-muted)">โดย คณะวิศวกรรมศาสตร์ กำแพงแสน มหาวิทยาลัยเกษตรศาสตร์</small>
+    </p>
+    <div class="hero-cta">
+      <a href="login.html" class="btn btn-primary btn-lg" data-auth="login">
+        🔑 เข้าร่วมเป็นสมาชิก
+      </a>
+      <a href="register.html" class="btn btn-secondary btn-lg" data-auth="required" style="display:none">
+        ➕ ลงทะเบียนปั๊มของคุณ
+      </a>
+      <button class="btn btn-outline btn-lg" id="btn-locate">
+        📍 หาปั๊มใกล้ฉัน
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== STATS BAR ===== -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="stat-total">–</div>
+      <div class="stat-label">ปั๊มทั้งหมด</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-verified">–</div>
+      <div class="stat-label">ยืนยันแล้ว</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-provinces">–</div>
+      <div class="stat-label">จังหวัด</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-online">–</div>
+      <div class="stat-label">ออนไลน์วันนี้</div>
+    </div>
+  </div>
+
+  <!-- ===== MAP SECTION ===== -->
+  <div class="map-section">
+    <!-- Search Bar -->
+    <div class="map-search-bar">
+      <input type="text" id="map-search" placeholder="🔍 ค้นหาพื้นที่หรือจังหวัด...">
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Filter chips -->
+    <div class="map-filter-bar" id="filter-bar">
+      <div class="filter-chip active" data-fuel="all">ทั้งหมด</div>
+      <div class="filter-chip" data-fuel="gasohol91">แก๊สโซฮอล์ 91</div>
+      <div class="filter-chip" data-fuel="gasohol95">แก๊สโซฮอล์ 95</div>
+      <div class="filter-chip" data-fuel="e20">E20</div>
+      <div class="filter-chip" data-fuel="e85">E85</div>
+      <div class="filter-chip" data-fuel="dieselB7">ดีเซล B7</div>
+      <div class="filter-chip" data-fuel="dieselB20">ดีเซล B20</div>
+      <div class="filter-chip" data-fuel="premiumDiesel">ดีเซลพรีเมียม</div>
+      <div class="filter-chip" data-fuel="ngv">NGV</div>
+    </div>
+  </div>
+
+  <!-- ===== STATION LIST PREVIEW ===== -->
+  <section class="section" style="background:var(--bg-card);border-top:1px solid var(--border)">
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+        <div>
+          <h2 class="section-title">🏪 ปั๊มน้ำมันที่ลงทะเบียน</h2>
+          <p class="section-desc" style="margin-bottom:0">คลิ๊กบนการ์ดเพื่อดูตำแหน่งบนแผนที่</p>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <select id="province-filter" class="form-control" style="width:auto;min-width:150px;padding:0.5rem 0.75rem">
+            <option value="">ทุกจังหวัด</option>
+          </select>
+          <select id="brand-filter" class="form-control" style="width:auto;padding:0.5rem 0.75rem">
+            <option value="">ทุกแบรนด์</option>
+          </select>
+          <a href="station-list.html" class="btn btn-outline btn-sm">ดูทั้งหมด →</a>
+        </div>
+      </div>
+
+      <div class="station-grid" id="station-grid">
+        <!-- Loaded by JS -->
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">
+          <div class="spinner" style="margin:0 auto 1rem"></div>
+          กำลังโหลดข้อมูลปั๊มน้ำมัน...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center">วิธีการใช้งาน</h2>
+      <p class="section-desc" style="text-align:center">เริ่มต้นบริหารจัดการปั๊มน้ำมันของคุณใน 3 ขั้นตอน</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-top:2rem">
+        <div class="card" style="text-align:center;border-top:3px solid var(--gold)">
+          <div style="font-size:2.5rem;margin-bottom:1rem">📝</div>
+          <h3 style="color:var(--gold);margin-bottom:0.5rem;font-size:1rem">1. ลงทะเบียน</h3>
+          <p style="color:var(--text-muted);font-size:0.875rem">
+            สมัครสมาชิกด้วย Google Gmail และกรอกข้อมูลปั๊มน้ำมัน พร้อมระบุตำแหน่งบนแผนที่
+          </p>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--gold)">
+          <div style="font-size:2.5rem;margin-bottom:1rem">⛽</div>
+          <h3 style="color:var(--gold);margin-bottom:0.5rem;font-size:1rem">2. อัปเดตสต๊อก</h3>
+          <p style="color:var(--text-muted);font-size:0.875rem">
+            อัปเดตข้อมูลปริมาณน้ำมันแต่ละประเภทเป็นเปอร์เซ็นต์ ผ่านแดชบอร์ดที่ใช้งานง่าย
+          </p>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--gold)">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🗺️</div>
+          <h3 style="color:var(--gold);margin-bottom:0.5rem;font-size:1rem">3. แสดงผลบนแผนที่</h3>
+          <p style="color:var(--text-muted);font-size:0.875rem">
+            ข้อมูลของคุณจะแสดงบนแผนที่ทันที ให้ผู้ใช้สามารถค้นหาและดูข้อมูลสต๊อกได้ง่าย
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-brand">⛽ KPS Fuel Good</div>
+    <div class="footer-sub">
+      พัฒนาโดย คณะวิศวกรรมศาสตร์ กำแพงแสน มหาวิทยาลัยเกษตรศาสตร์<br>
+      <a href="https://eng.kps.ku.ac.th" target="_blank" style="color:var(--gold-dark)">eng.kps.ku.ac.th</a>
+    </div>
+    <div style="color:var(--border);font-size:0.75rem">
+      แผนที่จาก <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> &copy; contributors
+    </div>
+  </footer>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<!-- Firebase 9 Compat (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- App Scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+/* ===== INDEX PAGE LOGIC ===== */
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // Init map
+  const map = MapModule.init('map', { center: [13.0, 101.0], zoom: 7 });
+
+  // Load stats
+  loadStats();
+
+  // Load stations
+  let allStations = [];
+  await loadStations();
+
+  // Province & Brand filter dropdowns
+  populateFilters(allStations);
+
+  // Search bar
+  let searchTimeout;
+  document.getElementById('map-search').addEventListener('input', e => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => handleSearch(e.target.value), 600);
+  });
+
+  // Fuel filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filterByFuel(chip.dataset.fuel);
+    });
+  });
+
+  // Province filter
+  document.getElementById('province-filter').addEventListener('change', e => {
+    filterAndRender(e.target.value, document.getElementById('brand-filter').value);
+  });
+
+  // Brand filter
+  document.getElementById('brand-filter').addEventListener('change', e => {
+    filterAndRender(document.getElementById('province-filter').value, e.target.value);
+  });
+
+  // Locate me
+  document.getElementById('btn-locate').addEventListener('click', async () => {
+    try {
+      const latlng = await MapModule.locateUser();
+      Toast.show('พบตำแหน่งของคุณ', 'success');
+    } catch {
+      Toast.show('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึง', 'warning');
+    }
+  });
+
+  /* ---- Functions ---- */
+
+  async function loadStations() {
+    try {
+      // Try Firestore first; fall back to demo data
+      let stations = await DB.getStations();
+      if (stations.length === 0) {
+        stations = DB.getDemoStations();
+      }
+      allStations = stations;
+      MapModule.addStations(stations);
+      renderStationGrid(stations);
+    } catch (e) {
+      const demo = DB.getDemoStations();
+      allStations = demo;
+      MapModule.addStations(demo);
+      renderStationGrid(demo);
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const stats = await DB.getStats();
+      document.getElementById('stat-total').textContent     = stats.total     || DB.getDemoStations().length;
+      document.getElementById('stat-verified').textContent  = stats.verified  || DB.getDemoStations().filter(s=>s.isVerified).length;
+      document.getElementById('stat-provinces').textContent = stats.provinces || new Set(DB.getDemoStations().map(s=>s.location?.province)).size;
+      document.getElementById('stat-online').textContent    = stats.total     || DB.getDemoStations().length;
+    } catch {
+      document.getElementById('stat-total').textContent     = DB.getDemoStations().length;
+      document.getElementById('stat-verified').textContent  = DB.getDemoStations().filter(s=>s.isVerified).length;
+      document.getElementById('stat-provinces').textContent = 3;
+      document.getElementById('stat-online').textContent    = DB.getDemoStations().length;
+    }
+  }
+
+  function populateFilters(stations) {
+    const provinces = [...new Set(stations.map(s => s.location?.province).filter(Boolean))].sort();
+    const brands    = [...new Set(stations.map(s => s.brand).filter(Boolean))].sort();
+
+    const pSel = document.getElementById('province-filter');
+    provinces.forEach(p => {
+      const opt = document.createElement('option'); opt.value = p; opt.textContent = p;
+      pSel.appendChild(opt);
+    });
+
+    const bSel = document.getElementById('brand-filter');
+    brands.forEach(b => {
+      const opt = document.createElement('option'); opt.value = b; opt.textContent = b;
+      bSel.appendChild(opt);
+    });
+
+    // Also add all Thai provinces
+    DB.PROVINCES.filter(p => !provinces.includes(p)).sort().forEach(p => {
+      const opt = document.createElement('option'); opt.value = p; opt.textContent = p;
+      pSel.appendChild(opt);
+    });
+
+    DB.BRANDS.filter(b => !brands.includes(b)).forEach(b => {
+      const opt = document.createElement('option'); opt.value = b; opt.textContent = b;
+      bSel.appendChild(opt);
+    });
+  }
+
+  function filterAndRender(province, brand) {
+    let filtered = allStations;
+    if (province) filtered = filtered.filter(s => s.location?.province === province);
+    if (brand)    filtered = filtered.filter(s => s.brand === brand);
+    MapModule.addStations(filtered);
+    renderStationGrid(filtered);
+  }
+
+  function filterByFuel(fuelKey) {
+    if (fuelKey === 'all') {
+      MapModule.addStations(allStations);
+      renderStationGrid(allStations);
+      return;
+    }
+    const filtered = allStations.filter(s => s.fuelStock && (s.fuelStock[fuelKey] || 0) > 0);
+    MapModule.addStations(filtered);
+    renderStationGrid(filtered);
+  }
+
+  async function handleSearch(q) {
+    if (!q.trim()) {
+      MapModule.addStations(allStations);
+      return;
+    }
+    const results = await MapModule.searchLocation(q);
+    if (results.length > 0) {
+      MapModule.flyTo(results[0].lat, results[0].lon, 12);
+    }
+  }
+
+  function renderStationGrid(stations) {
+    const grid = document.getElementById('station-grid');
+    if (!stations.length) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">
+          <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+          <p>ไม่พบปั๊มน้ำมันที่ตรงกับเงื่อนไข</p>
+          <a href="register.html" class="btn btn-primary mt-2">ลงทะเบียนปั๊มแรก</a>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = stations.slice(0, 9).map(s => {
+      const fuels = DB.FUEL_TYPES
+        .filter(f => s.fuelStock && (s.fuelStock[f.key] ?? -1) >= 0)
+        .slice(0, 4)
+        .map(f => DB.renderFuelBadge(f.key, s.fuelStock[f.key]))
+        .join('');
+
+      return `
+        <div class="station-card" onclick="focusOnMap('${s.id}')">
+          <div class="station-card-header">
+            <div>
+              <div class="station-name">${s.name}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem">
+                📍 ${s.location?.district || ''}, ${s.location?.province || ''}
+              </div>
+            </div>
+            <span class="station-brand-badge">${s.brand || 'อิสระ'}</span>
+          </div>
+          <div class="station-card-body">
+            <div class="station-fuels-mini">${fuels || '<span style="color:var(--text-muted);font-size:0.8rem">ยังไม่มีข้อมูลสต๊อก</span>'}</div>
+          </div>
+          <div class="station-card-footer">
+            <div class="station-status">
+              <div class="status-dot ${s.isActive ? 'online' : 'offline'}"></div>
+              <span style="font-size:0.8rem;color:var(--text-muted)">${s.isActive ? 'เปิดให้บริการ' : 'ปิด'}</span>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              ${s.isVerified ? '<span class="badge badge-success">✓ ยืนยัน</span>' : '<span class="badge badge-warning">รอยืนยัน</span>'}
+              <a href="station.html?id=${s.id}" class="btn btn-sm btn-outline" onclick="event.stopPropagation()">รายละเอียด</a>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+});
+
+function focusOnMap(stationId) {
+  MapModule.focusStation(stationId);
+  document.querySelector('#map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
+
+</body>
+</html>

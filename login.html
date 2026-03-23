@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="logo-circle">⛽</div>
+      <h2>KPS Fuel Good</h2>
+      <p>คณะวิศวกรรมศาสตร์ กำแพงแสน</p>
+    </div>
+
+    <!-- Alert area -->
+    <div id="auth-alert" style="display:none"></div>
+
+    <!-- Google Sign In -->
+    <button class="btn btn-google btn-full btn-lg" id="btn-google-signin">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      เข้าสู่ระบบด้วย Google
+    </button>
+
+    <div class="divider">หรือ</div>
+
+    <!-- Info text -->
+    <div style="background:rgba(201,162,39,0.08);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-size:0.875rem;color:var(--text-muted)">
+      <p style="font-weight:600;color:var(--gold);margin-bottom:0.5rem">📋 สำหรับเจ้าของปั๊มน้ำมัน</p>
+      <ul style="padding-left:1.25rem;line-height:1.8">
+        <li>ลงทะเบียนข้อมูลปั๊มน้ำมัน</li>
+        <li>ตำแหน่งที่ตั้งบนแผนที่</li>
+        <li>อัปเดตสต๊อกน้ำมันแบบเรียลไทม์</li>
+        <li>จัดการข้อมูลการติดต่อ</li>
+      </ul>
+    </div>
+
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem;color:var(--text-muted)">
+      การเข้าสู่ระบบถือว่ายอมรับ
+      <a href="#terms" style="color:var(--gold)">ข้อกำหนดการใช้งาน</a>
+    </p>
+
+    <div style="text-align:center;margin-top:1rem">
+      <a href="index.html" style="font-size:0.85rem;color:var(--text-muted)">← กลับหน้าหลัก</a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const alertEl = document.getElementById('auth-alert');
+
+  // Redirect if already logged in
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      window.location.href = redirect || 'dashboard.html';
+    }
+  });
+
+  document.getElementById('btn-google-signin').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-google-signin');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto"></div>';
+
+    const result = await Auth.signInWithGoogle();
+
+    if (result.success) {
+      alertEl.className = 'alert alert-success';
+      alertEl.innerHTML = '✅ เข้าสู่ระบบสำเร็จ! กำลังนำคุณไปยังแดชบอร์ด...';
+      alertEl.style.display = 'flex';
+    } else {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `❌ เกิดข้อผิดพลาด: ${result.error}`;
+      alertEl.style.display = 'flex';
+      btn.disabled = false;
+      btn.innerHTML = `
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;height:20px">
+        เข้าสู่ระบบด้วย Google`;
+    }
+  });
+});
+</script>
+
+</body>
+</html>
