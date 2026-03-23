@@ -17,7 +17,7 @@
     <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
   </a>
   <div class="navbar-nav">
-    <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+    <a href="index.html"    class="nav-link">🗺️ แผนที่</a>
     <a href="dashboard.html" class="nav-link active">📊 แดชบอร์ด</a>
     <div data-auth="userinfo" class="flex gap-1" style="display:none;align-items:center"></div>
     <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
@@ -26,7 +26,7 @@
 </nav>
 
 <div class="mobile-menu" id="mobile-menu">
-  <a href="index.html" class="nav-link">🗺️ แผนที่</a>
+  <a href="index.html"    class="nav-link">🗺️ แผนที่</a>
   <a href="register.html" class="nav-link">➕ ลงทะเบียนปั๊ม</a>
   <a href="#" data-action="logout" class="nav-link">🚪 ออกจากระบบ</a>
 </div>
@@ -38,16 +38,20 @@
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-section-title">เมนูหลัก</div>
-      <a href="#overview"  class="sidebar-link active" data-section="overview">
+      <a class="sidebar-link active" data-section="overview">
         <span class="icon">📊</span> ภาพรวม
       </a>
-      <a href="#stations"  class="sidebar-link" data-section="stations">
+      <a class="sidebar-link" data-section="queue-manage">
+        <span class="icon">🎫</span> จัดการคิว
+        <span class="badge badge-warning" id="sidebar-queue-badge" style="margin-left:auto;display:none">0</span>
+      </a>
+      <a class="sidebar-link" data-section="stations">
         <span class="icon">⛽</span> ปั๊มของฉัน
       </a>
-      <a href="#fuel-update" class="sidebar-link" data-section="fuel-update">
+      <a class="sidebar-link" data-section="fuel-update">
         <span class="icon">🔄</span> อัปเดตสต๊อก
       </a>
-      <a href="#profile"   class="sidebar-link" data-section="profile">
+      <a class="sidebar-link" data-section="profile">
         <span class="icon">👤</span> โปรไฟล์
       </a>
     </div>
@@ -65,110 +69,143 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN -->
   <main class="main-content">
 
-    <!-- ===== OVERVIEW SECTION ===== -->
+    <!-- ===== OVERVIEW ===== -->
     <section id="section-overview">
       <div class="dashboard-header">
         <h1 class="dashboard-title">สวัสดี, <span id="user-name">...</span> 👋</h1>
-        <p class="dashboard-subtitle">ภาพรวมปั๊มน้ำมันของคุณ</p>
+        <p class="dashboard-subtitle" id="today-date-label"></p>
       </div>
 
       <div class="metrics-grid">
         <div class="metric-card">
-          <div>
-            <div class="metric-value" id="my-station-count">–</div>
-            <div class="metric-label">ปั๊มที่ลงทะเบียน</div>
-          </div>
+          <div><div class="metric-value" id="my-station-count">–</div><div class="metric-label">ปั๊มที่ลงทะเบียน</div></div>
           <div class="metric-icon">⛽</div>
         </div>
         <div class="metric-card">
-          <div>
-            <div class="metric-value" id="my-verified-count">–</div>
-            <div class="metric-label">ได้รับการยืนยัน</div>
-          </div>
+          <div><div class="metric-value" id="queue-today-total" style="color:var(--gold)">–</div><div class="metric-label">คิววันนี้ (ทุกปั๊ม)</div></div>
+          <div class="metric-icon">🎫</div>
+        </div>
+        <div class="metric-card">
+          <div><div class="metric-value" id="queue-today-pending" style="color:#FF9800">–</div><div class="metric-label">⏳ รอคิว</div></div>
+          <div class="metric-icon">⏳</div>
+        </div>
+        <div class="metric-card">
+          <div><div class="metric-value" id="queue-today-done" style="color:#4CAF50">–</div><div class="metric-label">✅ เสร็จแล้ววันนี้</div></div>
           <div class="metric-icon">✅</div>
-        </div>
-        <div class="metric-card">
-          <div>
-            <div class="metric-value" id="my-low-stock-count" style="color:#FF5722">–</div>
-            <div class="metric-label">สต๊อกต่ำ (&lt;25%)</div>
-          </div>
-          <div class="metric-icon">⚠️</div>
-        </div>
-        <div class="metric-card">
-          <div>
-            <div class="metric-value" id="my-active-count">–</div>
-            <div class="metric-label">เปิดให้บริการ</div>
-          </div>
-          <div class="metric-icon">🟢</div>
         </div>
       </div>
 
-      <!-- Low stock alert -->
       <div id="low-stock-alert" style="display:none" class="alert alert-warning mb-3">
         ⚠️ มีน้ำมันบางชนิดสต๊อกต่ำกว่า 25% กรุณาอัปเดตข้อมูล
+      </div>
+      <div id="pending-queue-alert" style="display:none" class="alert alert-info mb-3">
+        📢 มีคิวรอรับบริการอยู่! ไปที่ <b>"จัดการคิว"</b> เพื่อเรียกคิว
+      </div>
+    </section>
+
+    <!-- ===== QUEUE MANAGEMENT ===== -->
+    <section id="section-queue-manage" class="mt-4" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem">
+        <div>
+          <h2 class="section-title" style="margin:0">🎫 จัดการคิว</h2>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem">
+            <span class="live-indicator"><div class="live-dot"></div> อัปเดต Real-time</span>
+            | วันนี้: <span id="queue-date-display" style="color:var(--gold);font-weight:600"></span>
+          </p>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+          <select id="queue-station-select" class="form-control" style="width:auto;min-width:160px">
+            <option value="">— เลือกปั๊ม —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary bar -->
+      <div class="queue-summary-bar" id="queue-summary-main">
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-total" style="color:var(--gold)">0</div>
+          <div class="queue-summary-label">ทั้งหมด</div>
+        </div>
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-pending" style="color:#FF9800">0</div>
+          <div class="queue-summary-label">⏳ รอ</div>
+        </div>
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-called" style="color:#2196F3">0</div>
+          <div class="queue-summary-label">📢 เรียก</div>
+        </div>
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-serving" style="color:#9C27B0">0</div>
+          <div class="queue-summary-label">⛽ บริการ</div>
+        </div>
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-completed" style="color:#4CAF50">0</div>
+          <div class="queue-summary-label">✅ เสร็จ</div>
+        </div>
+        <div class="queue-summary-item">
+          <div class="queue-summary-value" id="qm-cancelled" style="color:#9E9E9E">0</div>
+          <div class="queue-summary-label">❌ ยกเลิก</div>
+        </div>
+      </div>
+
+      <!-- Queue list -->
+      <div id="queue-list-container">
+        <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+          กรุณาเลือกปั๊มน้ำมัน
+        </div>
       </div>
     </section>
 
     <!-- ===== MY STATIONS ===== -->
-    <section id="section-stations" class="mt-4">
+    <section id="section-stations" class="mt-4" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem">
         <h2 class="section-title" style="margin:0">⛽ ปั๊มน้ำมันของฉัน</h2>
         <a href="register.html" class="btn btn-primary btn-sm">➕ เพิ่มปั๊มใหม่</a>
       </div>
-
       <div id="my-stations-container">
         <div style="text-align:center;padding:3rem;color:var(--text-muted)">
-          <div class="spinner" style="margin:0 auto 1rem"></div>
-          กำลังโหลด...
+          <div class="spinner" style="margin:0 auto 1rem"></div> กำลังโหลด...
         </div>
       </div>
     </section>
 
-    <!-- ===== FUEL UPDATE SECTION ===== -->
+    <!-- ===== FUEL UPDATE ===== -->
     <section id="section-fuel-update" class="mt-4" style="display:none">
       <h2 class="section-title">🔄 อัปเดตสต๊อกน้ำมัน</h2>
-      <p class="section-desc">เลือกปั๊มและอัปเดตระดับสต๊อกน้ำมัน</p>
-
       <div class="card">
         <div class="card-header">
           <select id="update-station-select" class="form-control" style="max-width:400px">
             <option value="">— เลือกปั๊มน้ำมัน —</option>
           </select>
         </div>
-
         <div id="fuel-update-form" style="display:none">
           <div class="fuel-stock-grid mt-2" id="fuel-sliders"></div>
-
           <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">
             <button class="btn btn-primary" id="btn-save-stock">💾 บันทึกสต๊อก</button>
             <button class="btn btn-outline" id="btn-cancel-stock">ยกเลิก</button>
           </div>
         </div>
-
         <div id="fuel-update-placeholder" style="padding:2rem;text-align:center;color:var(--text-muted)">
           กรุณาเลือกปั๊มน้ำมันที่ต้องการอัปเดต
         </div>
       </div>
     </section>
 
-    <!-- ===== PROFILE SECTION ===== -->
+    <!-- ===== PROFILE ===== -->
     <section id="section-profile" class="mt-4" style="display:none">
       <h2 class="section-title">👤 โปรไฟล์ผู้ใช้</h2>
       <div class="card" style="max-width:500px">
-        <div id="profile-content">
-          <div style="text-align:center;padding:2rem">
-            <img id="profile-photo" src="" alt="" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;margin-bottom:1rem">
-            <h3 id="profile-name" style="color:var(--gold)"></h3>
-            <p id="profile-email" style="color:var(--text-muted);font-size:0.9rem"></p>
-          </div>
-          <div class="form-group" style="padding:0 1rem 1rem">
-            <div style="display:flex;justify-content:center">
-              <button class="btn btn-danger" data-action="logout">🚪 ออกจากระบบ</button>
-            </div>
-          </div>
+        <div style="text-align:center;padding:2rem">
+          <img id="profile-photo" src="" alt="" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;margin-bottom:1rem">
+          <h3 id="profile-name" style="color:var(--gold)"></h3>
+          <p id="profile-email" style="color:var(--text-muted);font-size:0.9rem"></p>
+          <span class="badge badge-gold mt-1">🏪 ผู้ประกอบการปั๊มน้ำมัน</span>
+        </div>
+        <div style="padding:0 1rem 1rem;text-align:center">
+          <button class="btn btn-danger" data-action="logout">🚪 ออกจากระบบ</button>
         </div>
       </div>
     </section>
@@ -177,7 +214,7 @@
 </div>
 </div>
 
-<!-- ===== EDIT STATION MODAL ===== -->
+<!-- Edit Station Modal -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <div class="modal-header">
@@ -187,7 +224,7 @@
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">ชื่อปั๊มน้ำมัน <span class="required">*</span></label>
-        <input type="text" class="form-control" id="edit-name" placeholder="ชื่อปั๊ม">
+        <input type="text" class="form-control" id="edit-name">
       </div>
       <div class="form-group">
         <label class="form-label">แบรนด์</label>
@@ -195,21 +232,23 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">เบอร์โทรศัพท์</label>
-          <input type="tel" class="form-control" id="edit-phone" placeholder="0xx-xxxxxxx">
+          <label class="form-label">เบอร์โทร</label>
+          <input type="tel" class="form-control" id="edit-phone">
         </div>
         <div class="form-group">
           <label class="form-label">อีเมล</label>
           <input type="email" class="form-control" id="edit-email">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Line ID</label>
-        <input type="text" class="form-control" id="edit-line" placeholder="@lineid">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Facebook</label>
-        <input type="text" class="form-control" id="edit-facebook">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Line ID</label>
+          <input type="text" class="form-control" id="edit-line">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Facebook</label>
+          <input type="text" class="form-control" id="edit-facebook">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">เว็บไซต์</label>
@@ -242,53 +281,57 @@
 <script src="js/app.js"></script>
 
 <script>
-/* ===== DASHBOARD LOGIC ===== */
 let currentUser = null;
 let myStations  = [];
 let editingStationId = null;
+let queueListeners  = {};   // stationId → unsubscribe fn
+let allTodayQueues  = {};   // stationId → queues[]
+let selectedQueueStation = null;
+let queueStationListener = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Require auth
   currentUser = await Auth.requireAuth('login.html');
 
-  // Update profile display
+  // Only operators on this page
+  const role = await DB.getUserRole(currentUser.uid);
+  if (role === 'customer') { window.location.href = 'my-queues.html'; return; }
+
+  // UI
   document.getElementById('user-name').textContent = currentUser.displayName || currentUser.email;
+  document.getElementById('today-date-label').textContent =
+    new Date().toLocaleDateString('th-TH', { dateStyle: 'full' });
+  document.getElementById('queue-date-display').textContent =
+    new Date().toLocaleDateString('th-TH', { dateStyle: 'medium' });
   document.getElementById('profile-photo').src  = currentUser.photoURL || '';
   document.getElementById('profile-name').textContent  = currentUser.displayName || '';
   document.getElementById('profile-email').textContent = currentUser.email;
 
-  // Populate brand select in edit modal
+  // Brand select
   const editBrandSel = document.getElementById('edit-brand');
   DB.BRANDS.forEach(b => {
     const o = document.createElement('option'); o.value = b; o.textContent = b;
     editBrandSel.appendChild(o);
   });
 
-  // Load my stations
   await loadMyStations();
 
-  // Sidebar navigation
+  // Sidebar nav
   document.querySelectorAll('[data-section]').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
       switchSection(link.dataset.section);
-      // Hide mobile menu
       document.getElementById('mobile-menu').classList.remove('open');
     });
   });
 
-  // Station select for fuel update
+  // Fuel update
   document.getElementById('update-station-select').addEventListener('change', e => {
-    const id = e.target.value;
-    if (id) {
-      loadFuelSliders(id);
-    } else {
+    if (e.target.value) loadFuelSliders(e.target.value);
+    else {
       document.getElementById('fuel-update-form').style.display = 'none';
       document.getElementById('fuel-update-placeholder').style.display = 'block';
     }
   });
-
-  // Save stock
   document.getElementById('btn-save-stock').addEventListener('click', saveStock);
   document.getElementById('btn-cancel-stock').addEventListener('click', () => {
     document.getElementById('update-station-select').value = '';
@@ -296,189 +339,314 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('fuel-update-placeholder').style.display = 'block';
   });
 
-  // Save edit
+  // Queue station selector
+  document.getElementById('queue-station-select').addEventListener('change', e => {
+    const id = e.target.value;
+    if (queueStationListener) { queueStationListener(); queueStationListener = null; }
+    if (id) {
+      selectedQueueStation = id;
+      queueStationListener = DB.listenStationQueues(id, renderQueueList);
+    } else {
+      document.getElementById('queue-list-container').innerHTML =
+        '<div style="text-align:center;padding:3rem;color:var(--text-muted)">กรุณาเลือกปั๊มน้ำมัน</div>';
+    }
+  });
+
+  // Edit save
   document.getElementById('btn-save-edit').addEventListener('click', saveEdit);
 });
 
 function switchSection(section) {
   document.querySelectorAll('[data-section]').forEach(l => l.classList.remove('active'));
   document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
-
-  ['overview','stations','fuel-update','profile'].forEach(s => {
+  ['overview','queue-manage','stations','fuel-update','profile'].forEach(s => {
     const el = document.getElementById(`section-${s}`);
-    if (el) el.style.display = (s === section) ? '' : 'none';
+    if (el) el.style.display = s === section ? '' : 'none';
   });
 }
 
+/* ---- Load stations ---- */
 async function loadMyStations() {
-  try {
-    myStations = await DB.getMyStations(currentUser.uid);
+  myStations = await DB.getMyStations(currentUser.uid);
 
-    // Metrics
-    const lowStockCount = myStations.filter(s => {
-      if (!s.fuelStock) return false;
-      return Object.values(s.fuelStock).some(v => v > 0 && v <= 25);
-    }).length;
+  // Low stock check
+  const lowCount = myStations.filter(s =>
+    s.fuelStock && Object.values(s.fuelStock).some(v => v > 0 && v <= 25)
+  ).length;
+  document.getElementById('my-station-count').textContent = myStations.length;
+  if (lowCount) document.getElementById('low-stock-alert').style.display = 'flex';
 
-    document.getElementById('my-station-count').textContent  = myStations.length;
-    document.getElementById('my-verified-count').textContent = myStations.filter(s => s.isVerified).length;
-    document.getElementById('my-low-stock-count').textContent = lowStockCount;
-    document.getElementById('my-active-count').textContent   = myStations.filter(s => s.isActive).length;
+  // Populate queue station select
+  const qSel = document.getElementById('queue-station-select');
+  qSel.innerHTML = '<option value="">— เลือกปั๊ม —</option>';
+  // Fuel update select
+  const uSel = document.getElementById('update-station-select');
+  uSel.innerHTML = '<option value="">— เลือกปั๊มน้ำมัน —</option>';
 
-    if (lowStockCount > 0) {
-      document.getElementById('low-stock-alert').style.display = 'flex';
-    }
-
-    // Populate station select for fuel update
-    const sel = document.getElementById('update-station-select');
-    sel.innerHTML = '<option value="">— เลือกปั๊มน้ำมัน —</option>';
-    myStations.forEach(s => {
+  myStations.forEach(s => {
+    [qSel, uSel].forEach(sel => {
       const o = document.createElement('option'); o.value = s.id; o.textContent = s.name;
       sel.appendChild(o);
     });
+  });
 
-    // Render station cards
-    renderMyStations(myStations);
-  } catch (e) {
-    console.error(e);
-    Toast.show('โหลดข้อมูลไม่สำเร็จ', 'error');
+  // Start real-time queue listeners for all my stations (overview metrics)
+  Object.values(queueListeners).forEach(fn => fn());
+  queueListeners = {};
+  allTodayQueues = {};
+
+  myStations.forEach(s => {
+    queueListeners[s.id] = DB.listenStationQueues(s.id, queues => {
+      allTodayQueues[s.id] = queues;
+      updateOverviewQueueMetrics();
+    });
+  });
+
+  // If only 1 station, auto-select
+  if (myStations.length === 1) {
+    qSel.value = myStations[0].id;
+    qSel.dispatchEvent(new Event('change'));
+  }
+
+  renderMyStations(myStations);
+}
+
+function updateOverviewQueueMetrics() {
+  const allQueues = Object.values(allTodayQueues).flat();
+  const total     = allQueues.length;
+  const pending   = allQueues.filter(q => q.status === 'pending').length;
+  const completed = allQueues.filter(q => q.status === 'completed').length;
+
+  document.getElementById('queue-today-total').textContent   = total;
+  document.getElementById('queue-today-pending').textContent = pending;
+  document.getElementById('queue-today-done').textContent    = completed;
+
+  // Sidebar badge
+  const pendingCalled = allQueues.filter(q => ['pending','called'].includes(q.status)).length;
+  const badge = document.getElementById('sidebar-queue-badge');
+  badge.textContent    = pendingCalled;
+  badge.style.display  = pendingCalled > 0 ? '' : 'none';
+
+  // Overview alert
+  if (pending > 0) {
+    document.getElementById('pending-queue-alert').style.display = 'flex';
   }
 }
 
+/* ---- Render queue list (real-time, operator view) ---- */
+function renderQueueList(queues) {
+  // Update summary
+  const stat = {
+    total:     queues.length,
+    pending:   queues.filter(q => q.status === 'pending').length,
+    called:    queues.filter(q => q.status === 'called').length,
+    serving:   queues.filter(q => q.status === 'serving').length,
+    completed: queues.filter(q => q.status === 'completed').length,
+    cancelled: queues.filter(q => q.status === 'cancelled').length
+  };
+  document.getElementById('qm-total').textContent     = stat.total;
+  document.getElementById('qm-pending').textContent   = stat.pending;
+  document.getElementById('qm-called').textContent    = stat.called;
+  document.getElementById('qm-serving').textContent   = stat.serving;
+  document.getElementById('qm-completed').textContent = stat.completed;
+  document.getElementById('qm-cancelled').textContent = stat.cancelled;
+
+  const container = document.getElementById('queue-list-container');
+
+  if (!queues.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem;background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius)">
+        <div style="font-size:3rem;margin-bottom:0.75rem">🎫</div>
+        <p style="color:var(--text-muted)">ยังไม่มีคิววันนี้</p>
+      </div>`;
+    return;
+  }
+
+  // Group: active first (pending, called, serving), then completed/cancelled
+  const active    = queues.filter(q => ['pending','called','serving'].includes(q.status));
+  const inactive  = queues.filter(q => ['completed','cancelled'].includes(q.status));
+
+  container.innerHTML = `
+    ${active.length ? `
+      <h3 style="font-size:0.85rem;color:var(--gold);font-weight:700;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.08em">
+        🔴 คิวที่ยังดำเนินการ (${active.length})
+      </h3>
+      <div style="display:grid;gap:0.6rem;margin-bottom:1.5rem">
+        ${active.map(q => queueOperatorRow(q)).join('')}
+      </div>` : ''}
+
+    ${inactive.length ? `
+      <h3 style="font-size:0.85rem;color:var(--text-muted);font-weight:700;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.08em">
+        เสร็จสิ้น / ยกเลิก (${inactive.length})
+      </h3>
+      <div style="display:grid;gap:0.6rem">
+        ${inactive.map(q => queueOperatorRow(q)).join('')}
+      </div>` : ''}`;
+}
+
+function queueOperatorRow(q) {
+  const info = DB.getQueueStatusInfo(q.status);
+  const fuel = DB.FUEL_TYPES.find(f => f.key === q.fuelType);
+  const isActive = ['pending','called','serving'].includes(q.status);
+
+  const actions = [];
+  if (q.status === 'pending') {
+    actions.push(`<button class="btn-status btn-status-call" onclick="updateStatus('${q.id}','called')">📢 เรียกคิว</button>`);
+    actions.push(`<button class="btn-status btn-status-cancel" onclick="updateStatus('${q.id}','cancelled')">❌ ยกเลิก</button>`);
+  } else if (q.status === 'called') {
+    actions.push(`<button class="btn-status btn-status-serve" onclick="updateStatus('${q.id}','serving')">⛽ เริ่มเติม</button>`);
+    actions.push(`<button class="btn-status btn-status-cancel" onclick="updateStatus('${q.id}','cancelled')">❌ ยกเลิก</button>`);
+  } else if (q.status === 'serving') {
+    actions.push(`<button class="btn-status btn-status-done" onclick="updateStatus('${q.id}','completed')">✅ เสร็จสิ้น</button>`);
+  }
+
+  return `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;
+                background:var(--bg-card);border:1px solid ${isActive ? info.color + '44' : 'var(--border)'};
+                border-radius:var(--radius-sm);${isActive ? 'box-shadow:0 0 0 1px ' + info.color + '22;' : ''}">
+
+      <div class="queue-row-number q-${q.status}">${q.queueNumber}</div>
+
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:0.9rem;color:var(--text-light)">${q.customerName}</span>
+          <span class="queue-status-badge ${info.badgeClass}" style="font-size:0.7rem">${info.icon} ${info.label}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;flex-wrap:wrap">
+          <span class="queue-fuel-tag" style="background:${fuel?.color || '#C9A227'}22;color:${fuel?.color || '#C9A227'};border:1px solid ${fuel?.color || '#C9A227'}44;font-size:0.72rem">
+            ⛽ ${q.fuelLabel}
+          </span>
+          ${q.note ? `<span style="font-size:0.72rem;color:var(--text-muted)">📝 ${q.note}</span>` : ''}
+        </div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem">
+          จอง: ${q.createdAt ? formatDate(q.createdAt) : '–'}
+        </div>
+      </div>
+
+      <div class="status-action-row">${actions.join('')}</div>
+    </div>`;
+}
+
+async function updateStatus(queueId, status) {
+  const r = await DB.updateQueueStatus(queueId, status, currentUser.uid);
+  if (r.success) {
+    const info = DB.getQueueStatusInfo(status);
+    Toast.show(`${info.icon} อัปเดตเป็น "${info.label}" แล้ว`, 'success');
+  } else {
+    Toast.show(r.error, 'error');
+  }
+}
+
+/* ---- My Stations Table ---- */
 function renderMyStations(stations) {
   const container = document.getElementById('my-stations-container');
-
   if (!stations.length) {
     container.innerHTML = `
       <div style="text-align:center;padding:3rem;background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius)">
         <div style="font-size:3rem;margin-bottom:1rem">⛽</div>
         <h3 style="color:var(--gold);margin-bottom:0.5rem">ยังไม่มีปั๊มน้ำมัน</h3>
-        <p style="color:var(--text-muted);margin-bottom:1.5rem">เริ่มต้นลงทะเบียนปั๊มน้ำมันแรกของคุณ</p>
         <a href="register.html" class="btn btn-primary">➕ ลงทะเบียนปั๊มน้ำมัน</a>
       </div>`;
     return;
   }
 
-  container.innerHTML = `<div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>ชื่อปั๊ม</th>
-          <th>แบรนด์</th>
-          <th>จังหวัด</th>
-          <th>สต๊อก (ต่ำสุด)</th>
-          <th>สถานะ</th>
-          <th>การจัดการ</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${stations.map(s => {
-          const minStock = s.fuelStock
-            ? Math.min(...Object.values(s.fuelStock).filter(v => v > 0))
-            : null;
-          const stockCls = minStock === null ? '' :
-            minStock <= 25 ? 'fuel-low' : minStock <= 50 ? 'fuel-medium' : 'fuel-high';
-
-          return `
-            <tr>
-              <td><a href="station.html?id=${s.id}" style="color:var(--gold);font-weight:600">${s.name}</a></td>
-              <td>${s.brand || '–'}</td>
-              <td>${s.location?.province || '–'}</td>
-              <td class="${stockCls}">${minStock !== null ? minStock + '%' : '<span style="color:var(--text-muted)">ยังไม่มีข้อมูล</span>'}</td>
-              <td>${s.isActive
-                ? '<span class="badge badge-success">เปิด</span>'
-                : '<span class="badge badge-danger">ปิด</span>'}
-                ${s.isVerified ? '<span class="badge badge-gold" style="margin-left:4px">✓ ยืนยัน</span>' : ''}
-              </td>
-              <td style="white-space:nowrap">
-                <button class="btn btn-sm btn-outline" onclick="openEditModal('${s.id}')">✏️ แก้ไข</button>
-                <button class="btn btn-sm btn-primary" onclick="quickUpdateStock('${s.id}')">🔄 อัปเดตสต๊อก</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStation('${s.id}')">🗑️</button>
-              </td>
-            </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
+  container.innerHTML = `<div class="table-wrapper"><table>
+    <thead><tr>
+      <th>ชื่อปั๊ม</th><th>แบรนด์</th><th>จังหวัด</th>
+      <th>สต๊อกต่ำสุด</th><th>คิววันนี้</th><th>สถานะ</th><th>จัดการ</th>
+    </tr></thead>
+    <tbody>
+      ${stations.map(s => {
+        const minStock = s.fuelStock
+          ? Math.min(...Object.values(s.fuelStock).filter(v => v > 0))
+          : null;
+        const sCls = minStock === null ? '' : minStock <= 25 ? 'fuel-low' : minStock <= 50 ? 'fuel-medium' : 'fuel-high';
+        const todayQ = (allTodayQueues[s.id] || []).length;
+        return `<tr>
+          <td><a href="station.html?id=${s.id}" style="color:var(--gold);font-weight:600">${s.name}</a></td>
+          <td>${s.brand || '–'}</td>
+          <td>${s.location?.province || '–'}</td>
+          <td class="${sCls}">${minStock !== null ? minStock + '%' : '<span style="color:var(--text-muted)">–</span>'}</td>
+          <td><span style="font-weight:700;color:var(--gold)">${todayQ}</span> คิว</td>
+          <td>${s.isActive ? '<span class="badge badge-success">เปิด</span>' : '<span class="badge badge-danger">ปิด</span>'}
+              ${s.isVerified ? '<span class="badge badge-gold" style="margin-left:4px">✓</span>' : ''}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-sm btn-outline" onclick="openEditModal('${s.id}')">✏️</button>
+            <button class="btn btn-sm btn-primary" onclick="quickUpdateStock('${s.id}')">🔄 สต๊อก</button>
+            <button class="btn btn-sm btn-secondary" onclick="quickQueue('${s.id}')">🎫 คิว</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteStation('${s.id}')">🗑️</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-function quickUpdateStock(stationId) {
-  document.getElementById('update-station-select').value = stationId;
-  loadFuelSliders(stationId);
+function quickUpdateStock(id) {
+  document.getElementById('update-station-select').value = id;
+  loadFuelSliders(id);
   switchSection('fuel-update');
 }
 
-function loadFuelSliders(stationId) {
-  const station = myStations.find(s => s.id === stationId);
-  if (!station) return;
+function quickQueue(id) {
+  document.getElementById('queue-station-select').value = id;
+  document.getElementById('queue-station-select').dispatchEvent(new Event('change'));
+  switchSection('queue-manage');
+}
 
-  const stock = station.fuelStock || {};
-  const html  = DB.FUEL_TYPES.map(fuel => {
+function loadFuelSliders(stationId) {
+  const s = myStations.find(s => s.id === stationId);
+  if (!s) return;
+  const stock = s.fuelStock || {};
+  document.getElementById('fuel-sliders').innerHTML = DB.FUEL_TYPES.map(fuel => {
     const val = stock[fuel.key] ?? 0;
     const cls = val === 0 ? 'fuel-empty' : val <= 25 ? 'fuel-low' : val <= 50 ? 'fuel-medium' : 'fuel-high';
-
     return `
       <div class="fuel-stock-item">
-        <label>
-          <span class="fuel-dot" style="background:${fuel.color}"></span>
-          ${fuel.label}
-        </label>
+        <label><span class="fuel-dot" style="background:${fuel.color}"></span>${fuel.label}</label>
         <div class="range-with-value">
           <input type="range" id="fuel-${fuel.key}" min="0" max="100" step="5" value="${val}">
           <span class="range-val ${cls}" id="fuel-${fuel.key}-val">${val}%</span>
         </div>
       </div>`;
   }).join('');
-
-  document.getElementById('fuel-sliders').innerHTML = html;
   document.getElementById('fuel-update-form').style.display = 'block';
   document.getElementById('fuel-update-placeholder').style.display = 'none';
-
   initRangeInputs();
 }
 
 async function saveStock() {
   const stationId = document.getElementById('update-station-select').value;
   if (!stationId) return;
-
   const newStock = {};
-  DB.FUEL_TYPES.forEach(fuel => {
-    const inp = document.getElementById(`fuel-${fuel.key}`);
-    if (inp) newStock[fuel.key] = parseInt(inp.value);
+  DB.FUEL_TYPES.forEach(f => {
+    const inp = document.getElementById(`fuel-${f.key}`);
+    if (inp) newStock[f.key] = parseInt(inp.value);
   });
-
-  Loader.show('กำลังบันทึกสต๊อก...');
-  const result = await DB.updateFuelStock(stationId, newStock, currentUser.uid);
+  Loader.show('กำลังบันทึก...');
+  const r = await DB.updateFuelStock(stationId, newStock, currentUser.uid);
   Loader.hide();
-
-  if (result.success) {
-    Toast.show('บันทึกสต๊อกเรียบร้อย', 'success');
-    await loadMyStations();
-  } else {
-    Toast.show('บันทึกไม่สำเร็จ: ' + result.error, 'error');
-  }
+  if (r.success) { Toast.show('บันทึกสต๊อกเรียบร้อย', 'success'); await loadMyStations(); }
+  else           { Toast.show('บันทึกไม่สำเร็จ: ' + r.error, 'error'); }
 }
 
-function openEditModal(stationId) {
-  const s = myStations.find(s => s.id === stationId);
+function openEditModal(id) {
+  const s = myStations.find(s => s.id === id);
   if (!s) return;
-
-  editingStationId = stationId;
-  document.getElementById('edit-name').value    = s.name || '';
-  document.getElementById('edit-brand').value   = s.brand || '';
-  document.getElementById('edit-phone').value   = s.contact?.phone   || '';
-  document.getElementById('edit-email').value   = s.contact?.email   || '';
-  document.getElementById('edit-line').value    = s.contact?.lineId  || '';
-  document.getElementById('edit-facebook').value= s.contact?.facebook|| '';
-  document.getElementById('edit-website').value = s.contact?.website || '';
-  document.getElementById('edit-active').value  = String(s.isActive !== false);
-
+  editingStationId = id;
+  document.getElementById('edit-name').value     = s.name || '';
+  document.getElementById('edit-brand').value    = s.brand || '';
+  document.getElementById('edit-phone').value    = s.contact?.phone    || '';
+  document.getElementById('edit-email').value    = s.contact?.email    || '';
+  document.getElementById('edit-line').value     = s.contact?.lineId   || '';
+  document.getElementById('edit-facebook').value = s.contact?.facebook || '';
+  document.getElementById('edit-website').value  = s.contact?.website  || '';
+  document.getElementById('edit-active').value   = String(s.isActive !== false);
   document.getElementById('edit-modal').classList.add('open');
 }
 
 async function saveEdit() {
   if (!editingStationId) return;
-
   const data = {
     name:  document.getElementById('edit-name').value.trim(),
     brand: document.getElementById('edit-brand').value,
@@ -491,37 +659,33 @@ async function saveEdit() {
     },
     isActive: document.getElementById('edit-active').value === 'true'
   };
-
   if (!data.name) { Toast.show('กรุณากรอกชื่อปั๊มน้ำมัน', 'warning'); return; }
-
   Loader.show('กำลังบันทึก...');
-  const result = await DB.updateStation(editingStationId, data, currentUser.uid);
+  const r = await DB.updateStation(editingStationId, data, currentUser.uid);
   Loader.hide();
-
-  if (result.success) {
+  if (r.success) {
     Toast.show('แก้ไขข้อมูลเรียบร้อย', 'success');
     document.getElementById('edit-modal').classList.remove('open');
     await loadMyStations();
   } else {
-    Toast.show('บันทึกไม่สำเร็จ: ' + result.error, 'error');
+    Toast.show('บันทึกไม่สำเร็จ: ' + r.error, 'error');
   }
 }
 
-async function deleteStation(stationId) {
+async function deleteStation(id) {
   const ok = await confirmDialog('ลบปั๊มน้ำมัน', 'คุณต้องการลบปั๊มน้ำมันนี้ออกจากระบบหรือไม่?');
   if (!ok) return;
-
   Loader.show('กำลังลบ...');
-  const result = await DB.deleteStation(stationId, currentUser.uid);
+  const r = await DB.deleteStation(id, currentUser.uid);
   Loader.hide();
-
-  if (result.success) {
-    Toast.show('ลบปั๊มน้ำมันเรียบร้อย', 'success');
-    await loadMyStations();
-  } else {
-    Toast.show('ลบไม่สำเร็จ: ' + result.error, 'error');
-  }
+  if (r.success) { Toast.show('ลบเรียบร้อย', 'success'); await loadMyStations(); }
+  else           { Toast.show('ลบไม่สำเร็จ: ' + r.error, 'error'); }
 }
+
+window.addEventListener('beforeunload', () => {
+  Object.values(queueListeners).forEach(fn => fn());
+  if (queueStationListener) queueStationListener();
+});
 </script>
 
 </body>

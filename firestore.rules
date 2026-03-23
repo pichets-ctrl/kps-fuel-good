@@ -2,34 +2,60 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users: อ่านได้ทุกคนที่ล็อกอิน, แก้ไขได้เฉพาะเจ้าของ
+    // Users
     match /users/{uid} {
       allow read:  if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
-    // Stations: อ่านได้ทุกคน, สร้างได้เมื่อล็อกอิน, แก้ไข/ลบได้เฉพาะเจ้าของหรือ admin
+    // Stations
     match /stations/{stationId} {
       allow read: if true;
-
       allow create: if request.auth != null
         && request.resource.data.ownerId == request.auth.uid;
-
       allow update: if request.auth != null && (
         resource.data.ownerId == request.auth.uid ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
-
       allow delete: if request.auth != null && (
         resource.data.ownerId == request.auth.uid ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
     }
 
-    // Fuel Updates (audit log): อ่านได้เมื่อล็อกอิน, สร้างได้เมื่อล็อกอิน
+    // Fuel stock audit log
     match /fuelUpdates/{updateId} {
       allow read:   if request.auth != null;
       allow create: if request.auth != null;
     }
+
+    // Queues
+    match /queues/{queueId} {
+      // Public read for queue stats display
+      allow read: if true;
+
+      // Create: must be logged-in customer creating their own queue
+      allow create: if request.auth != null
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Update:
+      //   - Customer can only cancel their own queue (status → cancelled)
+      //   - Station operator can update status to called/serving/completed/cancelled
+      allow update: if request.auth != null && (
+        // Customer cancels their own queue
+        (resource.data.customerId == request.auth.uid
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.customerId == resource.data.customerId) ||
+        // Operator updates status (owns the station)
+        (get(/databases/$(database)/documents/stations/$(resource.data.stationId)).data.ownerId == request.auth.uid) ||
+        // Admin
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+
+      // No hard deletes on queues (only status updates)
+      allow delete: if false;
+    }
+
   }
 }

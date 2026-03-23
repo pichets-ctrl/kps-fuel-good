@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คิวของฉัน – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="index.html"        class="nav-link">🗺️ แผนที่</a>
+    <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+    <a href="my-queues.html"    class="nav-link active">🎫 คิวของฉัน</a>
+    <div data-auth="userinfo"   class="flex gap-1" style="display:none;align-items:center"></div>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html"        class="nav-link">🗺️ แผนที่</a>
+  <a href="station-list.html" class="nav-link">📋 รายการปั๊ม</a>
+  <a href="my-queues.html"    class="nav-link">🎫 คิวของฉัน</a>
+  <a href="#" data-action="logout" class="nav-link" data-auth="logout" style="display:none">🚪 ออกจากระบบ</a>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- Page Header -->
+  <div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));padding:2rem 1.5rem;border-bottom:2px solid var(--gold)">
+    <div class="container">
+      <h1 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:var(--text-light);margin-bottom:0.25rem">
+        🎫 คิวของฉัน
+      </h1>
+      <p style="color:var(--text-muted);font-size:0.9rem" id="user-greeting">กำลังโหลด...</p>
+    </div>
+  </div>
+
+  <div class="section">
+  <div class="container">
+
+    <!-- Today's limit bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+      <div class="daily-limit-bar" style="flex:1;min-width:260px;margin:0">
+        <div class="limit-dots">
+          <div class="limit-dot" id="dot-0" title="คิวที่ 1"></div>
+          <div class="limit-dot" id="dot-1" title="คิวที่ 2"></div>
+          <div class="limit-dot" id="dot-2" title="คิวที่ 3"></div>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--text-light);font-size:0.875rem" id="limit-text">กำลังโหลด...</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">จองได้สูงสุด 3 ปั๊มต่อวัน | รีเซ็ตเที่ยงคืนทุกวัน</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;align-items:center">
+        <div class="live-indicator" style="font-size:0.8rem">
+          <div class="live-dot"></div> อัปเดตอัตโนมัติ
+        </div>
+        <a href="station-list.html" class="btn btn-primary btn-sm">⛽ จองคิวเพิ่ม</a>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:1.5rem">
+      <button class="tab-btn active" id="tab-today" onclick="switchTab('today')">
+        📅 วันนี้ <span class="badge badge-gold" id="today-count-badge" style="margin-left:0.3rem">0</span>
+      </button>
+      <button class="tab-btn" id="tab-history" onclick="switchTab('history')">
+        🗓️ ประวัติคิว
+      </button>
+    </div>
+
+    <!-- TODAY TAB -->
+    <div id="tab-content-today">
+
+      <!-- Active queues (pending/called/serving) -->
+      <div id="active-queues-section" style="display:none">
+        <h3 style="font-size:0.95rem;color:var(--gold);font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem">
+          <div class="live-dot" style="width:9px;height:9px;border-radius:50%;background:#4CAF50;animation:livePulse 1.5s ease infinite"></div>
+          คิวที่กำลังดำเนินการ
+        </h3>
+        <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem" id="active-queues-list"></div>
+      </div>
+
+      <!-- Today's queue list -->
+      <div id="today-queues-list">
+        <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+          <div class="spinner" style="margin:0 auto 1rem"></div> กำลังโหลด...
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="today-empty" style="display:none;text-align:center;padding:3rem;background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius)">
+        <div style="font-size:3rem;margin-bottom:0.75rem">🎫</div>
+        <h3 style="color:var(--gold);margin-bottom:0.5rem;font-size:1rem">ยังไม่มีคิววันนี้</h3>
+        <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem">ค้นหาปั๊มน้ำมันและจองคิวเติมน้ำมัน สะดวก ไม่ต้องรอนาน</p>
+        <a href="index.html" class="btn btn-primary">🗺️ ค้นหาปั๊มใกล้ฉัน</a>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-content-history" style="display:none">
+      <div id="history-list">
+        <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+          <div class="spinner" style="margin:0 auto 1rem"></div> กำลังโหลด...
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">⛽ KPS Fuel Good</div>
+    <div class="footer-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน มหาวิทยาลัยเกษตรศาสตร์</div>
+  </footer>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+
+<style>
+  .tab-btn {
+    padding: 0.65rem 1.25rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--text-light); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+</style>
+
+<script>
+let currentUser    = null;
+let queueUnsubscribe = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await Auth.requireAuth('login.html');
+
+  // Only customers
+  const role = await DB.getUserRole(currentUser.uid);
+  if (role === 'operator') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  document.getElementById('user-greeting').textContent =
+    `สวัสดี, ${currentUser.displayName || currentUser.email} | ${new Date().toLocaleDateString('th-TH', { dateStyle: 'full' })}`;
+
+  // Real-time listener for today's queues
+  queueUnsubscribe = DB.listenMyQueues(currentUser.uid, renderTodayQueues);
+
+  // Load history
+  loadHistory();
+});
+
+function switchTab(tab) {
+  ['today','history'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`tab-content-${t}`).style.display = t === tab ? '' : 'none';
+  });
+}
+
+/* ---- Real-time today's queues ---- */
+function renderTodayQueues(queues) {
+  const usedCount = queues.filter(q => ['pending','called','serving','completed'].includes(q.status)).length;
+  updateLimitBar(usedCount);
+  document.getElementById('today-count-badge').textContent = queues.length;
+
+  const active  = queues.filter(q => ['called','serving'].includes(q.status));
+  const pending = queues.filter(q => q.status === 'pending');
+  const others  = queues.filter(q => ['completed','cancelled'].includes(q.status));
+
+  // Active section
+  const activeSection = document.getElementById('active-queues-section');
+  if (active.length) {
+    activeSection.style.display = '';
+    document.getElementById('active-queues-list').innerHTML = active.map(q => queueCardHTML(q, true)).join('');
+  } else {
+    activeSection.style.display = 'none';
+  }
+
+  // All today queues
+  const allOrdered = [...active, ...pending, ...others];
+  const listEl = document.getElementById('today-queues-list');
+
+  if (!allOrdered.length) {
+    listEl.innerHTML = '';
+    document.getElementById('today-empty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('today-empty').style.display = 'none';
+  listEl.innerHTML = `
+    <h3 style="font-size:0.85rem;color:var(--text-muted);font-weight:700;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.08em">
+      คิวทั้งหมดวันนี้ (${allOrdered.length} คิว)
+    </h3>
+    <div style="display:grid;gap:0.75rem">
+      ${allOrdered.map(q => queueCardHTML(q, false)).join('')}
+    </div>`;
+}
+
+function queueCardHTML(queue, highlight) {
+  const info = DB.getQueueStatusInfo(queue.status);
+  const fuel = DB.FUEL_TYPES.find(f => f.key === queue.fuelType);
+  const isActive = ['called','serving'].includes(queue.status);
+  const canCancel = ['pending','called'].includes(queue.status);
+
+  return `
+    <div class="queue-card ${highlight ? 'queue-active-pulse' : ''}"
+         style="${isActive ? `border-color:${info.color};` : ''}">
+      <div class="queue-card-header">
+        <div>
+          <div class="queue-station-name">
+            <a href="station.html?id=${queue.stationId}" style="color:var(--text-light)">
+              ${queue.stationName}
+            </a>
+            ${queue.stationBrand ? `<span class="station-brand-badge" style="font-size:0.65rem;margin-left:0.5rem">${queue.stationBrand}</span>` : ''}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem">📅 ${queue.date}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="queue-status-badge ${info.badgeClass}">${info.icon} ${info.label}</div>
+        </div>
+      </div>
+
+      <div class="queue-card-body">
+        <div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem">
+            <span class="queue-fuel-tag" style="background:${fuel?.color || '#C9A227'}22;color:${fuel?.color || '#C9A227'};border:1px solid ${fuel?.color || '#C9A227'}55">
+              ⛽ ${queue.fuelLabel}
+            </span>
+          </div>
+          ${queue.note ? `<div style="font-size:0.78rem;color:var(--text-muted)">📝 ${queue.note}</div>` : ''}
+          ${queue.servedAt
+            ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem">🕐 ${formatDate(queue.servedAt)}</div>`
+            : ''}
+        </div>
+
+        <div style="text-align:center">
+          <div class="queue-row-number q-${queue.status}">${queue.queueNumber}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.25rem">หมายเลขคิว</div>
+        </div>
+      </div>
+
+      ${canCancel ? `
+      <div class="queue-card-footer">
+        <div style="font-size:0.78rem;color:var(--text-muted)">สร้างเมื่อ: ${queue.createdAt ? formatDate(queue.createdAt) : '–'}</div>
+        <button class="btn btn-sm btn-outline" onclick="cancelMyQueue('${queue.id}')"
+                style="border-color:#616161;color:#9E9E9E;font-size:0.75rem">
+          ❌ ยกเลิกคิว
+        </button>
+      </div>` : `
+      <div class="queue-card-footer">
+        <div style="font-size:0.78rem;color:var(--text-muted)">สร้างเมื่อ: ${queue.createdAt ? formatDate(queue.createdAt) : '–'}</div>
+        <span class="badge ${info.badgeClass}">${info.icon} ${info.label}</span>
+      </div>`}
+    </div>`;
+}
+
+function updateLimitBar(used) {
+  document.getElementById('limit-text').textContent =
+    `ใช้ไปแล้ว ${used}/${DB.DAILY_QUEUE_LIMIT} คิววันนี้`;
+  for (let i = 0; i < DB.DAILY_QUEUE_LIMIT; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.className = `limit-dot ${i < used ? 'used' : 'empty'}`;
+  }
+}
+
+async function cancelMyQueue(queueId) {
+  const ok = await confirmDialog('ยกเลิกคิว', 'ต้องการยกเลิกคิวนี้หรือไม่?');
+  if (!ok) return;
+  Loader.show('กำลังยกเลิก...');
+  const r = await DB.cancelQueue(queueId, currentUser.uid);
+  Loader.hide();
+  if (r.success) {
+    Toast.show('ยกเลิกคิวเรียบร้อย', 'success');
+  } else {
+    Toast.show(r.error, 'error');
+  }
+}
+
+async function loadHistory() {
+  const queues = await DB.getMyAllQueues(currentUser.uid, 30);
+  const container = document.getElementById('history-list');
+
+  if (!queues.length) {
+    container.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text-muted)">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem">🗓️</div>
+      <p>ยังไม่มีประวัติการจองคิว</p></div>`;
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  queues.forEach(q => {
+    if (!byDate[q.date]) byDate[q.date] = [];
+    byDate[q.date].push(q);
+  });
+
+  container.innerHTML = Object.keys(byDate).sort().reverse().map(date => {
+    const dayQueues = byDate[date];
+    const completed = dayQueues.filter(q => q.status === 'completed').length;
+    const dateLabel = new Date(date + 'T00:00:00+07:00').toLocaleDateString('th-TH', { dateStyle: 'full' });
+    return `
+      <div style="margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <h3 style="font-size:0.875rem;color:var(--gold);font-weight:700">${dateLabel}</h3>
+          <span style="font-size:0.75rem;color:var(--text-muted)">${dayQueues.length} คิว | เสร็จ ${completed}</span>
+        </div>
+        <div style="display:grid;gap:0.6rem">
+          ${dayQueues.map(q => historyRowHTML(q)).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function historyRowHTML(q) {
+  const info = DB.getQueueStatusInfo(q.status);
+  const fuel = DB.FUEL_TYPES.find(f => f.key === q.fuelType);
+  return `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <div class="queue-row-number q-${q.status}" style="width:38px;height:38px;font-size:0.9rem">${q.queueNumber}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          <a href="station.html?id=${q.stationId}" style="color:var(--text-light)">${q.stationName}</a>
+        </div>
+        <div class="queue-fuel-tag" style="margin-top:0.2rem;background:${fuel?.color || '#C9A227'}22;color:${fuel?.color || '#C9A227'};border:1px solid ${fuel?.color || '#C9A227'}44;font-size:0.7rem">
+          ⛽ ${q.fuelLabel}
+        </div>
+      </div>
+      <span class="queue-status-badge ${info.badgeClass}" style="font-size:0.7rem;flex-shrink:0">
+        ${info.icon} ${info.label}
+      </span>
+    </div>`;
+}
+
+window.addEventListener('beforeunload', () => {
+  if (queueUnsubscribe) queueUnsubscribe();
+});
+</script>
+
+</body>
+</html>

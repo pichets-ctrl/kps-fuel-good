@@ -4,33 +4,69 @@
       "collectionGroup": "stations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "isActive",   "order": "ASCENDING" },
-        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+        { "fieldPath": "isActive",  "order": "ASCENDING"  },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "stations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ownerId",    "order": "ASCENDING" },
-        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+        { "fieldPath": "ownerId",   "order": "ASCENDING"  },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "stations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "isActive",          "order": "ASCENDING" },
-        { "fieldPath": "location.province", "order": "ASCENDING" },
+        { "fieldPath": "isActive",          "order": "ASCENDING"  },
+        { "fieldPath": "location.province", "order": "ASCENDING"  },
         { "fieldPath": "createdAt",         "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "queues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "customerId", "order": "ASCENDING"  },
+        { "fieldPath": "date",       "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "ASCENDING"  }
+      ]
+    },
+    {
+      "collectionGroup": "queues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "customerId", "order": "ASCENDING"  },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "queues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "stationId",    "order": "ASCENDING"  },
+        { "fieldPath": "date",         "order": "ASCENDING"  },
+        { "fieldPath": "queueNumber",  "order": "ASCENDING"  }
+      ]
+    },
+    {
+      "collectionGroup": "queues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "customerId", "order": "ASCENDING"  },
+        { "fieldPath": "stationId",  "order": "ASCENDING"  },
+        { "fieldPath": "date",       "order": "ASCENDING"  },
+        { "fieldPath": "status",     "order": "ASCENDING"  }
       ]
     },
     {
       "collectionGroup": "fuelUpdates",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "stationId",  "order": "ASCENDING" },
-        { "fieldPath": "updatedAt",  "order": "DESCENDING" }
+        { "fieldPath": "stationId", "order": "ASCENDING"  },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     }
   ],

@@ -1260,7 +1260,368 @@ footer .footer-sub {
 .gap-2 { gap: 1rem; }
 .d-none { display: none !important; }
 
-/* Leaflet dark theme tweaks */
+/* =========================================
+   ROLE SELECTION (Login)
+   ========================================= */
+.role-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.role-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg-dark);
+}
+
+.role-card:hover {
+  border-color: var(--gold-dark);
+  background: rgba(201,162,39,0.06);
+  transform: translateY(-2px);
+}
+
+.role-card.selected {
+  border-color: var(--gold);
+  background: rgba(201,162,39,0.12);
+  box-shadow: 0 0 0 3px rgba(201,162,39,0.2);
+}
+
+.role-card .role-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.role-card .role-title {
+  font-weight: 700;
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.role-card .role-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* =========================================
+   QUEUE STYLES
+   ========================================= */
+
+/* Queue number display */
+.queue-ticket {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.queue-ticket::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: rgba(201,162,39,0.08);
+}
+
+.queue-number-big {
+  font-size: 5rem;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(201,162,39,0.4);
+}
+
+.queue-number-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Queue status badge */
+.queue-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.badge-serving   { background: rgba(156,39,176,0.2); color: #CE93D8; border: 1px solid #7B1FA2; }
+.badge-cancelled { background: rgba(158,158,158,0.15); color: #9E9E9E; border: 1px solid #616161; }
+
+/* Queue card (customer view) */
+.queue-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all var(--transition);
+}
+
+.queue-card:hover {
+  border-color: var(--gold-dark);
+  box-shadow: var(--shadow);
+}
+
+.queue-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--primary-dark), rgba(139,26,26,0.4));
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.queue-card-body {
+  padding: 1rem 1.1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.queue-card-footer {
+  padding: 0.65rem 1.1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.queue-station-name {
+  font-weight: 700;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+.queue-fuel-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+/* Queue row (operator table view) */
+.queue-row-number {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--primary-dark);
+  background: var(--gold);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(201,162,39,0.35);
+}
+
+.queue-row-number.q-called    { background: #2196F3; color: white; }
+.queue-row-number.q-serving   { background: #9C27B0; color: white; }
+.queue-row-number.q-completed { background: #4CAF50; color: white; }
+.queue-row-number.q-cancelled { background: #616161; color: white; }
+
+/* Status action buttons */
+.status-action-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.btn-status {
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn-status-call {
+  border-color: #2196F3;
+  color: #90CAF9;
+  background: rgba(33,150,243,0.12);
+}
+.btn-status-call:hover { background: #2196F3; color: white; }
+
+.btn-status-serve {
+  border-color: #9C27B0;
+  color: #CE93D8;
+  background: rgba(156,39,176,0.12);
+}
+.btn-status-serve:hover { background: #9C27B0; color: white; }
+
+.btn-status-done {
+  border-color: #4CAF50;
+  color: #A5D6A7;
+  background: rgba(76,175,80,0.12);
+}
+.btn-status-done:hover { background: #4CAF50; color: white; }
+
+.btn-status-cancel {
+  border-color: #616161;
+  color: #9E9E9E;
+  background: rgba(97,97,97,0.1);
+}
+.btn-status-cancel:hover { background: #616161; color: white; }
+
+/* Queue stats summary bar */
+.queue-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.queue-summary-item {
+  background: var(--bg-card);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.queue-summary-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.queue-summary-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+/* Daily limit indicator */
+.daily-limit-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+}
+
+.limit-dots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.limit-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  transition: all var(--transition);
+}
+
+.limit-dot.used {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 6px rgba(201,162,39,0.4);
+}
+
+.limit-dot.empty {
+  background: transparent;
+  border-color: var(--border);
+}
+
+/* Queue booking modal fuel selector */
+.fuel-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.fuel-select-btn {
+  padding: 0.65rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg-dark);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition);
+}
+
+.fuel-select-btn:hover {
+  border-color: var(--gold-dark);
+  background: rgba(201,162,39,0.06);
+}
+
+.fuel-select-btn.selected {
+  border-color: var(--gold);
+  background: rgba(201,162,39,0.12);
+  box-shadow: 0 0 0 2px rgba(201,162,39,0.2);
+}
+
+.fuel-select-btn.unavailable {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.fuel-select-btn .fuel-name { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem; font-weight: 600; }
+.fuel-select-btn .fuel-pct  { font-size: 0.72rem; font-weight: 700; margin-top: 0.15rem; }
+
+/* Notification pulse for active queue */
+@keyframes queuePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,162,39,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(201,162,39,0); }
+}
+
+.queue-active-pulse {
+  animation: queuePulse 2s ease infinite;
+}
+
+/* Real-time indicator */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #4CAF50;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4CAF50;
+  animation: livePulse 1.5s ease infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* =========================================
+   Leaflet dark theme tweaks */
 .leaflet-container { background: #1a1a2e; }
 .leaflet-control-zoom a {
   background: var(--bg-card) !important;

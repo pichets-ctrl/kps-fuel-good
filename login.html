@@ -20,40 +20,72 @@
       <p>คณะวิศวกรรมศาสตร์ กำแพงแสน</p>
     </div>
 
-    <!-- Alert area -->
-    <div id="auth-alert" style="display:none"></div>
+    <!-- Alert -->
+    <div id="auth-alert" style="display:none" class="mb-2"></div>
 
-    <!-- Google Sign In -->
-    <button class="btn btn-google btn-full btn-lg" id="btn-google-signin">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-      เข้าสู่ระบบด้วย Google
-    </button>
+    <!-- STEP 1: Google Sign In -->
+    <div id="step-google">
+      <button class="btn btn-google btn-full btn-lg" id="btn-google-signin">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        เข้าสู่ระบบ / สมัครสมาชิกด้วย Google
+      </button>
 
-    <div class="divider">หรือ</div>
+      <div class="divider">เกี่ยวกับระบบ</div>
 
-    <!-- Info text -->
-    <div style="background:rgba(201,162,39,0.08);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-size:0.875rem;color:var(--text-muted)">
-      <p style="font-weight:600;color:var(--gold);margin-bottom:0.5rem">📋 สำหรับเจ้าของปั๊มน้ำมัน</p>
-      <ul style="padding-left:1.25rem;line-height:1.8">
-        <li>ลงทะเบียนข้อมูลปั๊มน้ำมัน</li>
-        <li>ตำแหน่งที่ตั้งบนแผนที่</li>
-        <li>อัปเดตสต๊อกน้ำมันแบบเรียลไทม์</li>
-        <li>จัดการข้อมูลการติดต่อ</li>
-      </ul>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div style="background:rgba(201,162,39,0.07);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.875rem;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:0.4rem">🏪</div>
+          <div style="font-size:0.78rem;font-weight:700;color:var(--gold);margin-bottom:0.25rem">เจ้าของปั๊ม</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.5">จัดการปั๊ม<br>อัปเดตสต๊อก<br>ดูคิวลูกค้า</div>
+        </div>
+        <div style="background:rgba(201,162,39,0.07);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.875rem;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:0.4rem">🚗</div>
+          <div style="font-size:0.78rem;font-weight:700;color:var(--gold);margin-bottom:0.25rem">ลูกค้า</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.5">ค้นหาปั๊ม<br>จองคิว<br>สูงสุด 3 ปั๊ม/วัน</div>
+        </div>
+      </div>
+
+      <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--text-muted)">
+        การเข้าสู่ระบบถือว่ายอมรับ <a href="#" style="color:var(--gold)">ข้อกำหนดการใช้งาน</a>
+      </p>
+      <div style="text-align:center;margin-top:0.75rem">
+        <a href="index.html" style="font-size:0.82rem;color:var(--text-muted)">← กลับหน้าหลัก</a>
+      </div>
     </div>
 
-    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem;color:var(--text-muted)">
-      การเข้าสู่ระบบถือว่ายอมรับ
-      <a href="#terms" style="color:var(--gold)">ข้อกำหนดการใช้งาน</a>
-    </p>
+    <!-- STEP 2: Role Selection (first-time only) -->
+    <div id="step-role" style="display:none">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:1.75rem;margin-bottom:0.5rem">🎉</div>
+        <h3 style="color:var(--gold);font-size:1.1rem;margin-bottom:0.3rem">ยินดีต้อนรับ!</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem">กรุณาเลือกประเภทสมาชิกของคุณ<br><small>(เลือกครั้งเดียว ไม่สามารถเปลี่ยนภายหลัง)</small></p>
+      </div>
 
-    <div style="text-align:center;margin-top:1rem">
-      <a href="index.html" style="font-size:0.85rem;color:var(--text-muted)">← กลับหน้าหลัก</a>
+      <div class="role-cards">
+        <div class="role-card" id="role-operator" data-role="operator">
+          <span class="role-icon">🏪</span>
+          <div class="role-title">เจ้าของ / ผู้ประกอบการ</div>
+          <div class="role-desc">ต้องการลงทะเบียนและจัดการปั๊มน้ำมัน อัปเดตสต๊อก และดูคิวลูกค้า</div>
+        </div>
+        <div class="role-card" id="role-customer" data-role="customer">
+          <span class="role-icon">🚗</span>
+          <div class="role-title">ลูกค้า</div>
+          <div class="role-desc">ต้องการค้นหาปั๊ม ดูสต๊อกน้ำมัน และจองคิวเติมน้ำมัน</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full mt-3" id="btn-confirm-role" disabled>
+        ✅ ยืนยันการสมัครสมาชิก
+      </button>
+
+      <p style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted)">
+        สามารถเปลี่ยนชื่อ-รูปโปรไฟล์ได้ภายหลัง
+      </p>
     </div>
+
   </div>
 </div>
 
-<!-- Toast container -->
 <div id="toast-container"></div>
 
 <!-- Firebase -->
@@ -62,20 +94,28 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/db.js"></script>
 <script src="js/app.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const alertEl = document.getElementById('auth-alert');
+let pendingUser = null;
+let selectedRole = null;
+const redirectTo = new URLSearchParams(window.location.search).get('redirect') || null;
 
-  // Redirect if already logged in
-  auth.onAuthStateChanged(user => {
+document.addEventListener('DOMContentLoaded', () => {
+
+  // If already logged in with role → redirect
+  auth.onAuthStateChanged(async user => {
     if (user) {
-      const redirect = new URLSearchParams(window.location.search).get('redirect');
-      window.location.href = redirect || 'dashboard.html';
+      const role = await DB.getUserRole(user.uid);
+      if (role) {
+        redirectAfterLogin(role);
+      }
+      // If no role yet → show role picker (handled below)
     }
   });
 
+  // Google Sign-In
   document.getElementById('btn-google-signin').addEventListener('click', async () => {
     const btn = document.getElementById('btn-google-signin');
     btn.disabled = true;
@@ -83,21 +123,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const result = await Auth.signInWithGoogle();
 
-    if (result.success) {
-      alertEl.className = 'alert alert-success';
-      alertEl.innerHTML = '✅ เข้าสู่ระบบสำเร็จ! กำลังนำคุณไปยังแดชบอร์ด...';
-      alertEl.style.display = 'flex';
-    } else {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `❌ เกิดข้อผิดพลาด: ${result.error}`;
-      alertEl.style.display = 'flex';
+    if (!result.success) {
+      showAlert('error', `❌ ${result.error}`);
       btn.disabled = false;
-      btn.innerHTML = `
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;height:20px">
-        เข้าสู่ระบบด้วย Google`;
+      btn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;height:20px"> เข้าสู่ระบบ / สมัครสมาชิกด้วย Google`;
+      return;
+    }
+
+    pendingUser = result.user;
+    const role  = await DB.getUserRole(pendingUser.uid);
+
+    if (role) {
+      // Existing user with role → redirect
+      showAlert('success', `✅ เข้าสู่ระบบสำเร็จ!`);
+      setTimeout(() => redirectAfterLogin(role), 800);
+    } else {
+      // New user → show role selection
+      document.getElementById('step-google').style.display = 'none';
+      document.getElementById('step-role').style.display   = 'block';
+    }
+  });
+
+  // Role card selection
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedRole = card.dataset.role;
+      document.getElementById('btn-confirm-role').disabled = false;
+    });
+  });
+
+  // Confirm role
+  document.getElementById('btn-confirm-role').addEventListener('click', async () => {
+    if (!selectedRole || !pendingUser) return;
+    const btn = document.getElementById('btn-confirm-role');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem"></div> กำลังบันทึก...';
+
+    const result = await DB.setUserRole(pendingUser.uid, selectedRole);
+    if (result.success) {
+      showAlert('success', '✅ สมัครสมาชิกเรียบร้อย!');
+      setTimeout(() => redirectAfterLogin(selectedRole), 800);
+    } else {
+      showAlert('error', `❌ ${result.error}`);
+      btn.disabled = false;
+      btn.innerHTML = '✅ ยืนยันการสมัครสมาชิก';
     }
   });
 });
+
+function redirectAfterLogin(role) {
+  if (redirectTo) {
+    window.location.href = redirectTo;
+    return;
+  }
+  window.location.href = role === 'operator' ? 'dashboard.html' : 'my-queues.html';
+}
+
+function showAlert(type, msg) {
+  const el = document.getElementById('auth-alert');
+  el.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+  el.innerHTML = msg;
+  el.style.display = 'flex';
+}
 </script>
 
 </body>
