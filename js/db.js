@@ -77,14 +77,22 @@ const DB = (() => {
      ========================================= */
   async function getStations(filters = {}) {
     try {
-      let query = db.collection('stations').where('isActive', '==', true);
-      if (filters.province) query = query.where('location.province', '==', filters.province);
-      if (filters.brand)    query = query.where('brand', '==', filters.brand);
-      const snap = await query.orderBy('createdAt', 'desc').get();
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // ใช้ query แบบ simple เพื่อไม่ต้องพึ่ง composite index
+      const snap = await db.collection('stations').where('isActive', '==', true).get();
+      let stations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // filter ฝั่ง client
+      if (filters.province) stations = stations.filter(s => s.location?.province === filters.province);
+      if (filters.brand)    stations = stations.filter(s => s.brand === filters.brand);
+      // sort โดย createdAt descending ฝั่ง client
+      stations.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return tb - ta;
+      });
+      return stations;
     } catch (e) {
       console.error('getStations error:', e);
-      return [];
+      throw e;  // ส่ง error ต่อเพื่อให้ caller จัดการแสดงผล
     }
   }
 
@@ -99,10 +107,15 @@ const DB = (() => {
   async function getMyStations(uid) {
     try {
       const snap = await db.collection('stations')
-        .where('ownerId', '==', uid)
-        .orderBy('createdAt', 'desc').get();
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { return []; }
+        .where('ownerId', '==', uid).get();
+      const stations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      stations.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return tb - ta;
+      });
+      return stations;
+    } catch (e) { console.error('getMyStations error:', e); return []; }
   }
 
   async function createStation(data, uid) {

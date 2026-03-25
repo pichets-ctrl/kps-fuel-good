@@ -268,34 +268,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadStations() {
     try {
-      // Try Firestore first; fall back to demo data
       let stations = await DB.getStations();
-      if (stations.length === 0) {
-        stations = DB.getDemoStations();
-      }
       allStations = stations;
       MapModule.addStations(stations);
       renderStationGrid(stations);
+      if (stations.length === 0) {
+        document.getElementById('station-grid').innerHTML =
+          '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">ยังไม่มีปั๊มน้ำมันในระบบ</div>';
+      }
     } catch (e) {
-      const demo = DB.getDemoStations();
-      allStations = demo;
-      MapModule.addStations(demo);
-      renderStationGrid(demo);
+      console.error('loadStations error:', e);
+      document.getElementById('station-grid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">⚠️ ไม่สามารถโหลดข้อมูลได้ กรุณารีเฟรช</div>';
     }
   }
 
   async function loadStats() {
     try {
       const stats = await DB.getStats();
-      document.getElementById('stat-total').textContent     = stats.total     || DB.getDemoStations().length;
-      document.getElementById('stat-verified').textContent  = stats.verified  || DB.getDemoStations().filter(s=>s.isVerified).length;
-      document.getElementById('stat-provinces').textContent = stats.provinces || new Set(DB.getDemoStations().map(s=>s.location?.province)).size;
-      document.getElementById('stat-online').textContent    = stats.total     || DB.getDemoStations().length;
+      document.getElementById('stat-total').textContent     = stats.total;
+      document.getElementById('stat-verified').textContent  = stats.verified;
+      document.getElementById('stat-provinces').textContent = stats.provinces;
+      document.getElementById('stat-online').textContent    = stats.total;
     } catch {
-      document.getElementById('stat-total').textContent     = DB.getDemoStations().length;
-      document.getElementById('stat-verified').textContent  = DB.getDemoStations().filter(s=>s.isVerified).length;
-      document.getElementById('stat-provinces').textContent = 3;
-      document.getElementById('stat-online').textContent    = DB.getDemoStations().length;
+      document.getElementById('stat-total').textContent     = '–';
+      document.getElementById('stat-verified').textContent  = '–';
+      document.getElementById('stat-provinces').textContent = '–';
+      document.getElementById('stat-online').textContent    = '–';
     }
   }
 
