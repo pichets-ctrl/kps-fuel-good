@@ -13,13 +13,13 @@
  */
 
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId:             "YOUR_APP_ID",
-  measurementId:     "YOUR_MEASUREMENT_ID"  // optional
+  apiKey:            "AIzaSyBQvoHdoex0c_v1OaUWcsyx6mZkrLsK0VI",
+  authDomain:        "kps-fuel-good.firebaseapp.com",
+  projectId:         "kps-fuel-good",
+  storageBucket:     "kps-fuel-good.firebasestorage.app",
+  messagingSenderId: "162119067632",
+  appId:             "1:162119067632:web:63012116bddc75dfc69f35",
+  measurementId:     "G-N17DSQN556"
 };
 
 // Initialize Firebase
