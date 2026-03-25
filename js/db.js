@@ -196,40 +196,32 @@ const DB = (() => {
   async function createQueue({ customerId, customerName, stationId, stationName, stationBrand, fuelType, note }) {
     const today = getTodayStr();
 
-    // 1. ตรวจสอบ limit รายวัน (max 3 ปั๊มต่อวัน)
+    // ดึงคิวของลูกค้าวันนี้ทั้งหมด (query เดียว ไม่ต้องใช้ composite index ซับซ้อน)
     const myTodaySnap = await db.collection('queues')
       .where('customerId', '==', customerId)
       .where('date', '==', today)
-      .where('status', 'in', ['pending', 'called', 'serving', 'completed'])
       .get();
+    const myToday = myTodaySnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    if (myTodaySnap.size >= DAILY_QUEUE_LIMIT) {
+    // 1. ตรวจสอบ limit รายวัน (max 3)
+    const activeCount = myToday.filter(q => ['pending','called','serving','completed'].includes(q.status)).length;
+    if (activeCount >= DAILY_QUEUE_LIMIT) {
       return { success: false, error: `คุณจองคิวครบ ${DAILY_QUEUE_LIMIT} ปั๊มแล้วในวันนี้ (รีเซ็ตพรุ่งนี้)` };
     }
 
-    // 2. ตรวจสอบว่าจองปั๊มนี้แล้วหรือยัง (ห้ามจองซ้ำปั๊มเดิมในวันเดียวกัน)
-    const dupSnap = await db.collection('queues')
-      .where('customerId', '==', customerId)
-      .where('stationId', '==', stationId)
-      .where('date', '==', today)
-      .where('status', 'in', ['pending', 'called', 'serving'])
-      .get();
-
-    if (!dupSnap.empty) {
+    // 2. ตรวจสอบจองปั๊มซ้ำ
+    const dup = myToday.find(q => q.stationId === stationId && ['pending','called','serving'].includes(q.status));
+    if (dup) {
       return { success: false, error: 'คุณมีคิวที่ปั๊มนี้อยู่แล้วในวันนี้' };
     }
 
-    // 3. คำนวณหมายเลขคิว (max queueNumber ของปั๊มในวันนี้ + 1)
+    // 3. คำนวณหมายเลขคิว (ดึงคิวปั๊มนี้วันนี้ แล้วหา max)
     const stationTodaySnap = await db.collection('queues')
       .where('stationId', '==', stationId)
       .where('date', '==', today)
-      .orderBy('queueNumber', 'desc')
-      .limit(1)
       .get();
-
-    const queueNumber = stationTodaySnap.empty
-      ? 1
-      : (stationTodaySnap.docs[0].data().queueNumber || 0) + 1;
+    const stationQueues = stationTodaySnap.docs.map(d => d.data().queueNumber || 0);
+    const queueNumber = stationQueues.length ? Math.max(...stationQueues) + 1 : 1;
 
     const fuel = FUEL_TYPES.find(f => f.key === fuelType);
 
@@ -343,21 +335,20 @@ const DB = (() => {
       const snap = await db.collection('queues')
         .where('customerId', '==', customerId)
         .where('date', '==', getTodayStr())
-        .where('status', 'in', ['pending', 'called', 'serving', 'completed'])
         .get();
-      return snap.size;
+      return snap.docs.filter(d => ['pending','called','serving','completed'].includes(d.data().status)).length;
     } catch { return 0; }
   }
 
-  /** Real-time listener: คิวของปั๊มวันนี้ */
+  /** Real-time listener: คิวของปั๊มวันนี้ (ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index) */
   function listenStationQueues(stationId, callback) {
     const today = getTodayStr();
     return db.collection('queues')
       .where('stationId', '==', stationId)
       .where('date', '==', today)
-      .orderBy('queueNumber', 'asc')
       .onSnapshot(snap => {
         const queues = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        queues.sort((a, b) => (a.queueNumber || 0) - (b.queueNumber || 0));
         callback(queues);
       });
   }
@@ -368,9 +359,9 @@ const DB = (() => {
     return db.collection('queues')
       .where('customerId', '==', customerId)
       .where('date', '==', today)
-      .orderBy('createdAt', 'asc')
       .onSnapshot(snap => {
         const queues = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        queues.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
         callback(queues);
       });
   }

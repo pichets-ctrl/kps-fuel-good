@@ -28,15 +28,8 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// Enable offline persistence
-db.enablePersistence({ synchronizeTabs: true })
-  .catch(err => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Firestore persistence: multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Firestore persistence: not supported in this browser');
-    }
-  });
+// ปิด offline persistence เพื่อให้ข้อมูล real-time เสมอ (ไม่มี stale cache)
+db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
 
 // Google Auth Provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
