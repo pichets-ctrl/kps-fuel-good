@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>นำเข้าสต๊อกน้ำมัน – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+  <a href="#" data-action="logout" class="nav-link">🚪 ออกจากระบบ</a>
+</div>
+
+<div class="page-wrapper">
+<div style="max-width:860px;margin:0 auto;padding:2rem 1rem">
+
+  <div style="margin-bottom:1.5rem">
+    <a href="dashboard.html" style="font-size:0.85rem;color:var(--text-muted)">← กลับแดชบอร์ด</a>
+    <h1 style="font-size:1.6rem;font-weight:800;color:var(--gold);margin-top:0.5rem">📦 นำเข้าสต๊อกน้ำมัน</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem">อัปเดตข้อมูลสต๊อกน้ำมันได้หลายวิธี เลือกวิธีที่สะดวกสำหรับคุณ</p>
+  </div>
+
+  <!-- Station selector -->
+  <div class="card mb-3">
+    <div style="padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <label style="font-weight:700;color:var(--gold);white-space:nowrap">⛽ ปั๊มน้ำมัน:</label>
+      <select id="import-station-select" class="form-control" style="flex:1;min-width:200px;max-width:360px">
+        <option value="">— เลือกปั๊มน้ำมัน —</option>
+      </select>
+      <div id="station-last-update" style="font-size:0.78rem;color:var(--text-muted)"></div>
+    </div>
+  </div>
+
+  <!-- Import method tabs -->
+  <div class="tab-nav mb-3">
+    <button class="tab-btn active" data-tab="photo">📷 ถ่ายภาพ / อัปโหลด</button>
+    <button class="tab-btn" data-tab="manual">✏️ กรอกเอง</button>
+    <button class="tab-btn" data-tab="iot">🔌 IoT / API</button>
+  </div>
+
+  <!-- ========== TAB: PHOTO ========== -->
+  <div id="tab-photo" class="tab-content">
+    <div class="card">
+      <div style="padding:1.25rem">
+        <h3 style="color:var(--gold);font-size:1rem;margin-bottom:0.25rem">📷 นำเข้าจากภาพถ่าย</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.25rem">
+          ถ่ายภาพหน้าจอโปรแกรมสต๊อก หรืออัปโหลดไฟล์ภาพ แล้วกรอกค่าที่ระบบอ่านได้
+        </p>
+
+        <!-- Upload area -->
+        <div id="upload-area" style="
+          border:2px dashed var(--border);border-radius:var(--radius);
+          padding:2.5rem 1.5rem;text-align:center;cursor:pointer;
+          transition:all var(--transition);background:rgba(201,162,39,0.03)">
+          <div style="font-size:3rem;margin-bottom:0.75rem">📸</div>
+          <p style="font-weight:700;color:var(--text-light);margin-bottom:0.35rem">แตะเพื่อถ่ายภาพ หรือเลือกไฟล์</p>
+          <p style="font-size:0.78rem;color:var(--text-muted)">รองรับ JPG, PNG, HEIC · สูงสุด 10 MB</p>
+          <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
+        </div>
+
+        <!-- Preview -->
+        <div id="photo-preview-wrap" style="display:none;margin-top:1.25rem">
+          <div style="position:relative;display:inline-block;width:100%">
+            <img id="photo-preview" src="" alt="preview" style="
+              width:100%;max-height:320px;object-fit:contain;
+              border-radius:var(--radius-sm);border:1px solid var(--border)">
+            <button onclick="clearPhoto()" style="
+              position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);
+              border:none;border-radius:50%;width:28px;height:28px;
+              color:white;cursor:pointer;font-size:0.9rem">✕</button>
+          </div>
+
+          <!-- OCR hint -->
+          <div style="
+            background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.3);
+            border-radius:var(--radius-sm);padding:0.85rem 1rem;margin-top:1rem">
+            <div style="font-size:0.8rem;color:#64B5F6;font-weight:700;margin-bottom:0.5rem">
+              💡 วิธีใช้: กรอกค่าจากภาพด้านล่าง
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);line-height:1.6">
+              ดูค่าเปอร์เซ็นต์สต๊อกจากภาพ แล้วปรับ Slider แต่ละน้ำมันด้านล่าง
+              ระบบ OCR อัตโนมัติจะพร้อมใช้งานในเวอร์ชันถัดไป
+            </p>
+          </div>
+
+          <div id="photo-fuel-sliders" class="mt-3"></div>
+
+          <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btn-save-photo-stock">💾 บันทึกสต๊อก</button>
+            <button class="btn btn-outline" onclick="clearPhoto()">🔄 เลือกภาพใหม่</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TAB: MANUAL ========== -->
+  <div id="tab-manual" class="tab-content" style="display:none">
+    <div class="card">
+      <div style="padding:1.25rem">
+        <h3 style="color:var(--gold);font-size:1rem;margin-bottom:0.25rem">✏️ กรอกข้อมูลเอง</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.25rem">
+          ปรับ slider หรือพิมพ์ตัวเลขเปอร์เซ็นต์สต๊อกน้ำมันแต่ละชนิด
+        </p>
+
+        <div id="manual-fuel-sliders"></div>
+
+        <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(201,162,39,0.05);border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-muted)">
+          💡 เคล็ดลับ: แตะปุ่ม <strong style="color:var(--gold)">คัดลอกจากสต๊อกล่าสุด</strong> เพื่อโหลดค่าเดิมก่อนแก้ไข
+        </div>
+
+        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-save-manual-stock">💾 บันทึกสต๊อก</button>
+          <button class="btn btn-outline" id="btn-load-last-stock">📋 คัดลอกจากสต๊อกล่าสุด</button>
+          <button class="btn btn-outline" id="btn-reset-sliders">🔄 รีเซ็ต</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TAB: IoT / API ========== -->
+  <div id="tab-iot" class="tab-content" style="display:none">
+
+    <!-- IoT options -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:1.25rem">
+
+      <!-- Webhook -->
+      <div class="card" style="border-color:rgba(156,39,176,0.4)">
+        <div style="padding:1.25rem">
+          <div style="font-size:1.75rem;margin-bottom:0.5rem">🔗</div>
+          <h3 style="color:#CE93D8;font-size:0.95rem;margin-bottom:0.3rem">Webhook (POST)</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.6">
+            ส่งข้อมูลสต๊อกจาก IoT sensor, PLC หรือโปรแกรมเดิมผ่าน HTTP POST
+          </p>
+          <div style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;font-size:0.72rem;color:#CE93D8;font-family:monospace;word-break:break-all;margin-bottom:0.75rem">
+            POST https://kps-fuel-good.web.app/api/stock
+          </div>
+          <button class="btn btn-sm" style="background:rgba(156,39,176,0.15);color:#CE93D8;border-color:rgba(156,39,176,0.4)" onclick="showWebhookDocs()">
+            📄 ดูเอกสาร API
+          </button>
+        </div>
+      </div>
+
+      <!-- QR Scan -->
+      <div class="card" style="border-color:rgba(33,150,243,0.4)">
+        <div style="padding:1.25rem">
+          <div style="font-size:1.75rem;margin-bottom:0.5rem">📡</div>
+          <h3 style="color:#64B5F6;font-size:0.95rem;margin-bottom:0.3rem">IoT Sensor</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.6">
+            เชื่อมต่อ sensor วัดระดับน้ำมัน (ultrasonic, float) ผ่าน ESP8266/ESP32
+          </p>
+          <div id="iot-api-key-display" style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;font-size:0.72rem;color:#64B5F6;font-family:monospace;word-break:break-all;margin-bottom:0.75rem">
+            API Key: กรุณาเลือกปั๊มก่อน
+          </div>
+          <button class="btn btn-sm" style="background:rgba(33,150,243,0.15);color:#64B5F6;border-color:rgba(33,150,243,0.4)" onclick="copyApiKey()">
+            📋 คัดลอก API Key
+          </button>
+        </div>
+      </div>
+
+      <!-- CSV Upload -->
+      <div class="card" style="border-color:rgba(76,175,80,0.4)">
+        <div style="padding:1.25rem">
+          <div style="font-size:1.75rem;margin-bottom:0.5rem">📊</div>
+          <h3 style="color:#81C784;font-size:0.95rem;margin-bottom:0.3rem">นำเข้าไฟล์ CSV</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.6">
+            Export ข้อมูลจากโปรแกรมสต๊อกเดิม แล้วอัปโหลดไฟล์ .csv
+          </p>
+          <div style="border:1.5px dashed rgba(76,175,80,0.4);border-radius:var(--radius-sm);padding:0.6rem;text-align:center;margin-bottom:0.75rem">
+            <input type="file" id="csv-input" accept=".csv,.txt" style="display:none">
+            <button onclick="document.getElementById('csv-input').click()" class="btn btn-sm" style="background:rgba(76,175,80,0.15);color:#81C784;border-color:rgba(76,175,80,0.4)">
+              📂 เลือกไฟล์ CSV
+            </button>
+          </div>
+          <div id="csv-preview" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhook docs panel -->
+    <div id="webhook-docs" style="display:none">
+      <div class="card" style="border-color:rgba(156,39,176,0.4)">
+        <div style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 style="color:#CE93D8;font-size:0.95rem">📄 เอกสาร Webhook API</h3>
+            <button onclick="document.getElementById('webhook-docs').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem">✕</button>
+          </div>
+
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">Request Body (JSON):</div>
+          <pre style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:1rem;font-size:0.75rem;color:#CE93D8;overflow-x:auto;line-height:1.7">{
+  "stationId": "your-station-id",
+  "apiKey":    "your-api-key",
+  "fuelStock": {
+    "gasohol91":     85,
+    "gasohol95":     70,
+    "e20":           60,
+    "e85":           45,
+    "dieselB7":      90,
+    "dieselB20":     50,
+    "premiumDiesel": 75,
+    "ngv":           30
+  }
+}</pre>
+
+          <div style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0 0.4rem">ตัวอย่างโค้ด ESP8266 (Arduino):</div>
+          <pre style="background:var(--bg-dark);border-radius:var(--radius-sm);padding:1rem;font-size:0.72rem;color:#81C784;overflow-x:auto;line-height:1.7">HTTPClient http;
+http.begin("https://kps-fuel-good.web.app/api/stock");
+http.addHeader("Content-Type","application/json");
+String body = "{\"stationId\":\""+stationId+"\","
+              "\"apiKey\":\""+apiKey+"\","
+              "\"fuelStock\":{\"dieselB7\":"+String(level)+"}}";
+http.POST(body);</pre>
+
+          <div style="margin-top:1rem;padding:0.75rem;background:rgba(255,152,0,0.08);border-radius:var(--radius-sm);border:1px solid rgba(255,152,0,0.3)">
+            <div style="font-size:0.78rem;color:#FFB74D">⚠️ API Webhook อยู่ระหว่างพัฒนา — รองรับในเวอร์ชันถัดไป</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last IoT data -->
+    <div class="card">
+      <div style="padding:1.25rem">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+          <span class="live-indicator"><div class="live-dot"></div> Real-time</span>
+          <h3 style="font-size:0.95rem;color:var(--text-light)">ค่าสต๊อกปัจจุบัน</h3>
+        </div>
+        <div id="iot-current-stock">
+          <div style="text-align:center;padding:2rem;color:var(--text-muted)">กรุณาเลือกปั๊มน้ำมัน</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save success banner -->
+  <div id="save-success-banner" style="display:none;margin-top:1rem">
+    <div class="alert alert-success">
+      ✅ บันทึกสต๊อกเรียบร้อยแล้ว! ข้อมูลอัปเดต Real-time บนแผนที่แล้ว
+      <a href="dashboard.html" style="margin-left:1rem;font-weight:700">→ กลับแดชบอร์ด</a>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let currentUser  = null;
+let myStations   = [];
+let selectedStation = null;
+let currentTab   = 'photo';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await Auth.requireAuth('login.html');
+  const role  = await DB.getUserRole(currentUser.uid);
+  if (role !== 'operator') { window.location.href = 'my-queues.html'; return; }
+
+  myStations = await DB.getMyStations(currentUser.uid);
+
+  const sel = document.getElementById('import-station-select');
+  myStations.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    sel.appendChild(o);
+  });
+  if (myStations.length === 1) {
+    sel.value = myStations[0].id;
+    sel.dispatchEvent(new Event('change'));
+  }
+
+  sel.addEventListener('change', () => {
+    selectedStation = myStations.find(s => s.id === sel.value) || null;
+    onStationChange();
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      document.getElementById('tab-' + currentTab).style.display = '';
+    });
+  });
+
+  // Photo upload
+  const uploadArea = document.getElementById('upload-area');
+  const photoInput = document.getElementById('photo-input');
+  uploadArea.addEventListener('click', () => photoInput.click());
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--gold)'; });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--border)';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadPhotoPreview(file);
+  });
+  photoInput.addEventListener('change', () => {
+    if (photoInput.files[0]) loadPhotoPreview(photoInput.files[0]);
+  });
+
+  // Save buttons
+  document.getElementById('btn-save-photo-stock').addEventListener('click', () => saveStock('photo'));
+  document.getElementById('btn-save-manual-stock').addEventListener('click', () => saveStock('manual'));
+  document.getElementById('btn-load-last-stock').addEventListener('click', loadLastStock);
+  document.getElementById('btn-reset-sliders').addEventListener('click', resetSliders);
+
+  // CSV
+  document.getElementById('csv-input').addEventListener('change', handleCsvUpload);
+});
+
+function onStationChange() {
+  if (!selectedStation) {
+    document.getElementById('station-last-update').textContent = '';
+    document.getElementById('iot-api-key-display').textContent = 'API Key: กรุณาเลือกปั๊มก่อน';
+    document.getElementById('iot-current-stock').innerHTML =
+      '<div style="text-align:center;padding:2rem;color:var(--text-muted)">กรุณาเลือกปั๊มน้ำมัน</div>';
+    return;
+  }
+
+  const lastUp = selectedStation.updatedAt;
+  document.getElementById('station-last-update').textContent =
+    lastUp ? '🕐 อัปเดตล่าสุด: ' + formatDate(lastUp) : '';
+
+  // API key display (use station ID as key placeholder)
+  document.getElementById('iot-api-key-display').textContent =
+    'API Key: kps_' + selectedStation.id.slice(0, 12) + '...';
+
+  renderCurrentStock();
+  renderSliders('photo-fuel-sliders', selectedStation.fuelStock || {});
+  renderSliders('manual-fuel-sliders', selectedStation.fuelStock || {});
+}
+
+function renderCurrentStock() {
+  if (!selectedStation) return;
+  const stock = selectedStation.fuelStock || {};
+  const html = DB.FUEL_TYPES.map(f => {
+    const v = stock[f.key] ?? 0;
+    const cls = v === 0 ? 'fuel-empty' : v <= 25 ? 'fuel-low' : v <= 50 ? 'fuel-medium' : 'fuel-high';
+    return `
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+        <div style="width:70px;font-size:0.78rem;color:${f.color};font-weight:700;flex-shrink:0">${f.shortLabel}</div>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${v}%;background:${f.color};border-radius:4px;transition:width 0.5s"></div>
+        </div>
+        <div class="${cls}" style="font-size:0.82rem;font-weight:700;width:40px;text-align:right">${v}%</div>
+      </div>`;
+  }).join('');
+  document.getElementById('iot-current-stock').innerHTML =
+    `<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem">${selectedStation.name}</div>${html}`;
+}
+
+function renderSliders(containerId, stock) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = DB.FUEL_TYPES.map(f => {
+    const v = stock[f.key] ?? 0;
+    return `
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem">
+          <label style="font-size:0.85rem;font-weight:600;color:${f.color}">${f.label}</label>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <input type="number" id="${containerId}-num-${f.key}"
+              value="${v}" min="0" max="100" style="
+              width:60px;background:var(--bg-dark);border:1px solid var(--border);
+              border-radius:var(--radius-sm);padding:0.25rem 0.5rem;
+              color:var(--text-light);font-size:0.85rem;font-weight:700;text-align:center">
+            <span style="font-size:0.82rem;color:var(--text-muted)">%</span>
+          </div>
+        </div>
+        <input type="range" id="${containerId}-${f.key}"
+          value="${v}" min="0" max="100" style="
+          width:100%;accent-color:${f.color};height:6px;cursor:pointer">
+      </div>`;
+  }).join('');
+
+  // Sync range ↔ number
+  DB.FUEL_TYPES.forEach(f => {
+    const range = document.getElementById(`${containerId}-${f.key}`);
+    const num   = document.getElementById(`${containerId}-num-${f.key}`);
+    range.addEventListener('input', () => { num.value = range.value; });
+    num.addEventListener('input', () => {
+      let v = Math.max(0, Math.min(100, parseInt(num.value) || 0));
+      num.value = v; range.value = v;
+    });
+  });
+}
+
+function getSliderValues(containerId) {
+  const stock = {};
+  DB.FUEL_TYPES.forEach(f => {
+    const el = document.getElementById(`${containerId}-${f.key}`);
+    if (el) stock[f.key] = parseInt(el.value) || 0;
+  });
+  return stock;
+}
+
+function loadPhotoPreview(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photo-preview').src = e.target.result;
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('photo-preview-wrap').style.display = '';
+    if (selectedStation) {
+      renderSliders('photo-fuel-sliders', selectedStation.fuelStock || {});
+    } else {
+      renderSliders('photo-fuel-sliders', {});
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  document.getElementById('photo-preview').src = '';
+  document.getElementById('upload-area').style.display = '';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+}
+
+async function saveStock(source) {
+  if (!selectedStation) { Toast.show('กรุณาเลือกปั๊มน้ำมันก่อน', 'warning'); return; }
+  const containerId = source === 'photo' ? 'photo-fuel-sliders' : 'manual-fuel-sliders';
+  const stock = getSliderValues(containerId);
+
+  const btnId = source === 'photo' ? 'btn-save-photo-stock' : 'btn-save-manual-stock';
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก...';
+
+  const result = await DB.updateFuelStock(selectedStation.id, stock, currentUser.uid);
+  btn.disabled = false;
+  btn.innerHTML = '💾 บันทึกสต๊อก';
+
+  if (result.success) {
+    selectedStation.fuelStock = stock;
+    renderCurrentStock();
+    document.getElementById('save-success-banner').style.display = '';
+    Toast.show('✅ บันทึกสต๊อกเรียบร้อย!', 'success');
+    setTimeout(() => document.getElementById('save-success-banner').style.display = 'none', 5000);
+  } else {
+    Toast.show('❌ ' + result.error, 'error');
+  }
+}
+
+function loadLastStock() {
+  if (!selectedStation) { Toast.show('กรุณาเลือกปั๊มก่อน', 'warning'); return; }
+  renderSliders('manual-fuel-sliders', selectedStation.fuelStock || {});
+  Toast.show('📋 โหลดค่าสต๊อกล่าสุดแล้ว', 'info');
+}
+
+function resetSliders() {
+  renderSliders('manual-fuel-sliders', {});
+  Toast.show('🔄 รีเซ็ตค่าทั้งหมดแล้ว', 'info');
+}
+
+function handleCsvUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const lines = ev.target.result.split('\n').filter(l => l.trim());
+    const stock = {};
+    // Expected format: fuelKey,percentage  e.g. "gasohol91,85"
+    lines.forEach(line => {
+      const [key, val] = line.split(',');
+      if (key && val) {
+        const k = key.trim();
+        const v = parseInt(val.trim());
+        if (DB.FUEL_TYPES.find(f => f.key === k) && !isNaN(v)) {
+          stock[k] = Math.max(0, Math.min(100, v));
+        }
+      }
+    });
+    if (Object.keys(stock).length === 0) {
+      Toast.show('❌ ไม่พบข้อมูลที่ถูกต้องในไฟล์ CSV', 'error');
+      return;
+    }
+    renderSliders('manual-fuel-sliders', stock);
+    document.querySelector('[data-tab="manual"]').click();
+    Toast.show(`✅ โหลดข้อมูล CSV แล้ว ${Object.keys(stock).length} รายการ`, 'success');
+    document.getElementById('csv-preview').style.display = '';
+    document.getElementById('csv-preview').innerHTML =
+      `<div style="font-size:0.78rem;color:#81C784">นำเข้าสำเร็จ ${Object.keys(stock).length} รายการ → ไปที่แท็บ "กรอกเอง" เพื่อยืนยัน</div>`;
+  };
+  reader.readAsText(file);
+}
+
+function copyApiKey() {
+  if (!selectedStation) { Toast.show('กรุณาเลือกปั๊มก่อน', 'warning'); return; }
+  const key = 'kps_' + selectedStation.id;
+  navigator.clipboard.writeText(key).then(() => Toast.show('📋 คัดลอก API Key แล้ว', 'success'));
+}
+
+function showWebhookDocs() {
+  const el = document.getElementById('webhook-docs');
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+function formatDate(ts) {
+  if (!ts) return '–';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+}
+</script>
+
+</body>
+</html>
