@@ -77,22 +77,18 @@ const DB = (() => {
      ========================================= */
   async function getStations(filters = {}) {
     try {
-      // ใช้ query แบบ simple เพื่อไม่ต้องพึ่ง composite index
-      const snap = await db.collection('stations').where('isActive', '==', true).get();
-      let stations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // filter ฝั่ง client
+      // ดึงทุก document แล้ว filter client-side (รองรับ doc ที่ไม่มี isActive field)
+      const snap = await db.collection('stations').get();
+      let stations = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(s => s.isActive !== false); // แสดงเมื่อ isActive=true หรือไม่มี field นี้
       if (filters.province) stations = stations.filter(s => s.location?.province === filters.province);
       if (filters.brand)    stations = stations.filter(s => s.brand === filters.brand);
-      // sort โดย createdAt descending ฝั่ง client
-      stations.sort((a, b) => {
-        const ta = a.createdAt?.toMillis?.() || 0;
-        const tb = b.createdAt?.toMillis?.() || 0;
-        return tb - ta;
-      });
+      stations.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
       return stations;
     } catch (e) {
       console.error('getStations error:', e);
-      throw e;  // ส่ง error ต่อเพื่อให้ caller จัดการแสดงผล
+      throw e;
     }
   }
 
