@@ -20,67 +20,96 @@
       <p>คณะวิศวกรรมศาสตร์ กำแพงแสน</p>
     </div>
 
+    <!-- Step indicator -->
+    <div class="auth-steps" id="auth-steps">
+      <div class="auth-step active" id="astep-1">
+        <div class="auth-step-circle">1</div>
+        <div class="auth-step-label">เลือกประเภท</div>
+      </div>
+      <div class="auth-step-line"></div>
+      <div class="auth-step" id="astep-2">
+        <div class="auth-step-circle">2</div>
+        <div class="auth-step-label">เข้าสู่ระบบ</div>
+      </div>
+    </div>
+
     <!-- Alert -->
     <div id="auth-alert" style="display:none" class="mb-2"></div>
 
-    <!-- STEP 1: Google Sign In -->
-    <div id="step-google">
+    <!-- STEP 1: Role Selection -->
+    <div id="step-role-select">
+      <div style="text-align:center;margin-bottom:1.25rem">
+        <h3 style="color:var(--gold);font-size:1.05rem;margin-bottom:0.3rem">คุณเข้าใช้งานในฐานะ?</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem">เลือกประเภทสมาชิกก่อนเข้าสู่ระบบ</p>
+      </div>
+
+      <div class="role-cards">
+        <div class="role-card" id="rc-operator" data-role="operator">
+          <span class="role-icon">🏪</span>
+          <div class="role-title">เจ้าของ / ผู้ประกอบการ</div>
+          <div class="role-desc">จัดการปั๊มน้ำมัน<br>อัปเดตสต๊อก · ดูคิวลูกค้า</div>
+        </div>
+        <div class="role-card" id="rc-customer" data-role="customer">
+          <span class="role-icon">🚗</span>
+          <div class="role-title">ลูกค้า</div>
+          <div class="role-desc">ค้นหาปั๊ม ดูสต๊อก<br>จองคิว สูงสุด 3 ปั๊ม/วัน</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full mt-3" id="btn-next-to-login" disabled>
+        ถัดไป →
+      </button>
+
+      <div style="text-align:center;margin-top:1rem">
+        <a href="index.html" style="font-size:0.82rem;color:var(--text-muted)">← กลับหน้าหลัก</a>
+      </div>
+    </div>
+
+    <!-- STEP 2: Google Sign In -->
+    <div id="step-google-login" style="display:none">
+      <!-- Selected role display -->
+      <div id="selected-role-display" style="
+        display:flex;align-items:center;gap:0.75rem;
+        background:rgba(201,162,39,0.08);border:1px solid var(--gold);
+        border-radius:var(--radius-sm);padding:0.75rem 1rem;margin-bottom:1.25rem">
+        <span id="selected-role-icon" style="font-size:1.5rem">🏪</span>
+        <div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">สมัคร / เข้าสู่ระบบในฐานะ</div>
+          <div id="selected-role-label" style="font-weight:700;color:var(--gold);font-size:0.9rem">เจ้าของปั๊ม</div>
+        </div>
+        <button onclick="backToRoleSelect()" style="
+          margin-left:auto;background:none;border:1px solid var(--border);
+          border-radius:var(--radius-sm);padding:0.3rem 0.6rem;
+          color:var(--text-muted);font-size:0.75rem;cursor:pointer">
+          เปลี่ยน
+        </button>
+      </div>
+
       <button class="btn btn-google btn-full btn-lg" id="btn-google-signin">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
         เข้าสู่ระบบ / สมัครสมาชิกด้วย Google
       </button>
 
-      <div class="divider">เกี่ยวกับระบบ</div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div style="background:rgba(201,162,39,0.07);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.875rem;text-align:center">
-          <div style="font-size:1.5rem;margin-bottom:0.4rem">🏪</div>
-          <div style="font-size:0.78rem;font-weight:700;color:var(--gold);margin-bottom:0.25rem">เจ้าของปั๊ม</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.5">จัดการปั๊ม<br>อัปเดตสต๊อก<br>ดูคิวลูกค้า</div>
-        </div>
-        <div style="background:rgba(201,162,39,0.07);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.875rem;text-align:center">
-          <div style="font-size:1.5rem;margin-bottom:0.4rem">🚗</div>
-          <div style="font-size:0.78rem;font-weight:700;color:var(--gold);margin-bottom:0.25rem">ลูกค้า</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.5">ค้นหาปั๊ม<br>จองคิว<br>สูงสุด 3 ปั๊ม/วัน</div>
-        </div>
-      </div>
-
       <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--text-muted)">
         การเข้าสู่ระบบถือว่ายอมรับ <a href="#" style="color:var(--gold)">ข้อกำหนดการใช้งาน</a>
       </p>
-      <div style="text-align:center;margin-top:0.75rem">
-        <a href="index.html" style="font-size:0.82rem;color:var(--text-muted)">← กลับหน้าหลัก</a>
-      </div>
     </div>
 
-    <!-- STEP 2: Role Selection (first-time only) -->
-    <div id="step-role" style="display:none">
-      <div style="text-align:center;margin-bottom:1.5rem">
-        <div style="font-size:1.75rem;margin-bottom:0.5rem">🎉</div>
-        <h3 style="color:var(--gold);font-size:1.1rem;margin-bottom:0.3rem">ยินดีต้อนรับ!</h3>
-        <p style="color:var(--text-muted);font-size:0.85rem">กรุณาเลือกประเภทสมาชิกของคุณ<br><small>(เลือกครั้งเดียว ไม่สามารถเปลี่ยนภายหลัง)</small></p>
+    <!-- STEP 3: Role conflict – existing user has different role -->
+    <div id="step-role-mismatch" style="display:none">
+      <div style="text-align:center;padding:1rem 0">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">⚠️</div>
+        <h3 style="color:var(--gold);margin-bottom:0.5rem">บัญชีนี้ลงทะเบียนแล้ว</h3>
+        <p id="mismatch-msg" style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">
+          บัญชีของคุณเป็นประเภท <strong id="existing-role-label" style="color:var(--gold)"></strong> อยู่แล้ว
+        </p>
+        <button class="btn btn-primary btn-full" id="btn-continue-existing">
+          เข้าสู่ระบบต่อเนื่อง →
+        </button>
+        <button onclick="backToRoleSelect()" class="btn btn-outline btn-full mt-2" style="font-size:0.85rem">
+          ← เลือกประเภทสมาชิกใหม่
+        </button>
       </div>
-
-      <div class="role-cards">
-        <div class="role-card" id="role-operator" data-role="operator">
-          <span class="role-icon">🏪</span>
-          <div class="role-title">เจ้าของ / ผู้ประกอบการ</div>
-          <div class="role-desc">ต้องการลงทะเบียนและจัดการปั๊มน้ำมัน อัปเดตสต๊อก และดูคิวลูกค้า</div>
-        </div>
-        <div class="role-card" id="role-customer" data-role="customer">
-          <span class="role-icon">🚗</span>
-          <div class="role-title">ลูกค้า</div>
-          <div class="role-desc">ต้องการค้นหาปั๊ม ดูสต๊อกน้ำมัน และจองคิวเติมน้ำมัน</div>
-        </div>
-      </div>
-
-      <button class="btn btn-primary btn-full mt-3" id="btn-confirm-role" disabled>
-        ✅ ยืนยันการสมัครสมาชิก
-      </button>
-
-      <p style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted)">
-        สามารถเปลี่ยนชื่อ-รูปโปรไฟล์ได้ภายหลัง
-      </p>
     </div>
 
   </div>
@@ -98,24 +127,45 @@
 <script src="js/app.js"></script>
 
 <script>
-let pendingUser = null;
-let selectedRole = null;
-const redirectTo = new URLSearchParams(window.location.search).get('redirect') || null;
+let pendingUser    = null;
+let selectedRole   = null;
+const redirectTo   = new URLSearchParams(window.location.search).get('redirect') || null;
+
+const ROLE_INFO = {
+  operator: { label: 'เจ้าของ / ผู้ประกอบการ', icon: '🏪' },
+  customer:  { label: 'ลูกค้า',                  icon: '🚗' }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // If already logged in with role → redirect
+  // If already logged in with role → redirect immediately
   auth.onAuthStateChanged(async user => {
     if (user) {
       const role = await DB.getUserRole(user.uid);
-      if (role) {
-        redirectAfterLogin(role);
-      }
-      // If no role yet → show role picker (handled below)
+      if (role) redirectAfterLogin(role);
     }
   });
 
-  // Google Sign-In
+  // Step 1: Role card selection
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedRole = card.dataset.role;
+      document.getElementById('btn-next-to-login').disabled = false;
+    });
+  });
+
+  // Step 1 → Step 2
+  document.getElementById('btn-next-to-login').addEventListener('click', () => {
+    if (!selectedRole) return;
+    const info = ROLE_INFO[selectedRole];
+    document.getElementById('selected-role-icon').textContent  = info.icon;
+    document.getElementById('selected-role-label').textContent = info.label;
+    setStep(2);
+  });
+
+  // Step 2: Google Sign-In
   document.getElementById('btn-google-signin').addEventListener('click', async () => {
     const btn = document.getElementById('btn-google-signin');
     btn.disabled = true;
@@ -131,53 +181,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     pendingUser = result.user;
-    const role  = await DB.getUserRole(pendingUser.uid);
+    const existingRole = await DB.getUserRole(pendingUser.uid);
 
-    if (role) {
-      // Existing user with role → redirect
-      showAlert('success', `✅ เข้าสู่ระบบสำเร็จ!`);
-      setTimeout(() => redirectAfterLogin(role), 800);
+    if (!existingRole) {
+      // New user → save selected role and redirect
+      const saveResult = await DB.setUserRole(pendingUser.uid, selectedRole);
+      if (saveResult.success) {
+        showAlert('success', '✅ สมัครสมาชิกเรียบร้อย!');
+        setTimeout(() => redirectAfterLogin(selectedRole), 800);
+      } else {
+        showAlert('error', `❌ ${saveResult.error}`);
+        btn.disabled = false;
+        btn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;height:20px"> เข้าสู่ระบบ / สมัครสมาชิกด้วย Google`;
+      }
+    } else if (existingRole === selectedRole) {
+      // Matching role → just login
+      showAlert('success', '✅ เข้าสู่ระบบสำเร็จ!');
+      setTimeout(() => redirectAfterLogin(existingRole), 800);
     } else {
-      // New user → show role selection
-      document.getElementById('step-google').style.display = 'none';
-      document.getElementById('step-role').style.display   = 'block';
+      // Role mismatch → show mismatch screen
+      const info = ROLE_INFO[existingRole];
+      document.getElementById('existing-role-label').textContent = info.label;
+      setStep('mismatch');
     }
   });
 
-  // Role card selection
-  document.querySelectorAll('.role-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      selectedRole = card.dataset.role;
-      document.getElementById('btn-confirm-role').disabled = false;
-    });
-  });
-
-  // Confirm role
-  document.getElementById('btn-confirm-role').addEventListener('click', async () => {
-    if (!selectedRole || !pendingUser) return;
-    const btn = document.getElementById('btn-confirm-role');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem"></div> กำลังบันทึก...';
-
-    const result = await DB.setUserRole(pendingUser.uid, selectedRole);
-    if (result.success) {
-      showAlert('success', '✅ สมัครสมาชิกเรียบร้อย!');
-      setTimeout(() => redirectAfterLogin(selectedRole), 800);
-    } else {
-      showAlert('error', `❌ ${result.error}`);
-      btn.disabled = false;
-      btn.innerHTML = '✅ ยืนยันการสมัครสมาชิก';
-    }
+  // Mismatch: continue with existing role
+  document.getElementById('btn-continue-existing').addEventListener('click', async () => {
+    const existingRole = await DB.getUserRole(pendingUser.uid);
+    if (existingRole) redirectAfterLogin(existingRole);
   });
 });
 
-function redirectAfterLogin(role) {
-  if (redirectTo) {
-    window.location.href = redirectTo;
-    return;
+function setStep(step) {
+  document.getElementById('step-role-select').style.display    = 'none';
+  document.getElementById('step-google-login').style.display   = 'none';
+  document.getElementById('step-role-mismatch').style.display  = 'none';
+
+  // Update step indicators
+  document.getElementById('astep-1').classList.remove('active','done');
+  document.getElementById('astep-2').classList.remove('active','done');
+
+  if (step === 1) {
+    document.getElementById('step-role-select').style.display = '';
+    document.getElementById('astep-1').classList.add('active');
+  } else if (step === 2) {
+    document.getElementById('step-google-login').style.display = '';
+    document.getElementById('astep-1').classList.add('done');
+    document.getElementById('astep-2').classList.add('active');
+  } else if (step === 'mismatch') {
+    document.getElementById('step-role-mismatch').style.display = '';
+    document.getElementById('astep-1').classList.add('done');
+    document.getElementById('astep-2').classList.add('active');
   }
+}
+
+function backToRoleSelect() {
+  selectedRole = null;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-next-to-login').disabled = true;
+  document.getElementById('auth-alert').style.display = 'none';
+  setStep(1);
+}
+
+function redirectAfterLogin(role) {
+  if (redirectTo) { window.location.href = redirectTo; return; }
   window.location.href = role === 'operator' ? 'dashboard.html' : 'my-queues.html';
 }
 

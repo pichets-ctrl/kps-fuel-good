@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จัดการคิว – KPS Fuel Good</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="logo-icon">⛽</div>
+    <div>KPS Fuel Good <span class="brand-sub">คณะวิศวกรรมศาสตร์ กำแพงแสน</span></div>
+  </a>
+  <div class="navbar-nav">
+    <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+    <a href="#" data-action="logout" data-auth="logout" class="nav-link" style="display:none">ออกจากระบบ</a>
+  </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="dashboard.html" class="nav-link">📊 แดชบอร์ด</a>
+  <a href="#" data-action="logout" class="nav-link">🚪 ออกจากระบบ</a>
+</div>
+
+<div class="page-wrapper">
+<div style="max-width:960px;margin:0 auto;padding:1.5rem 1rem">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem">
+    <div>
+      <a href="dashboard.html" style="font-size:0.85rem;color:var(--text-muted)">← กลับแดชบอร์ด</a>
+      <h1 style="font-size:1.5rem;font-weight:800;color:var(--gold);margin-top:0.4rem">🎫 จัดการคิว (เจ้าของปั๊ม)</h1>
+      <p style="color:var(--text-muted);font-size:0.85rem">
+        <span class="live-indicator"><div class="live-dot"></div> Real-time</span>
+        &nbsp;|&nbsp; วันนี้: <span id="today-label" style="color:var(--gold)"></span>
+        &nbsp;|&nbsp; คิวค้างเกิน 10 นาทีจะถูกยกเลิกอัตโนมัติ
+      </p>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+      <select id="queue-station-select" class="form-control" style="min-width:180px;width:auto">
+        <option value="">— เลือกปั๊ม —</option>
+      </select>
+      <button id="btn-sound-toggle" class="btn btn-sm btn-outline" title="เปิด/ปิดเสียงแจ้งเตือน" style="font-size:1rem;padding:0.4rem 0.65rem">🔔</button>
+    </div>
+  </div>
+
+  <!-- Summary bar -->
+  <div class="queue-summary-bar" id="summary-bar" style="margin-bottom:1.25rem">
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-total" style="color:var(--gold)">0</div>
+      <div class="queue-summary-label">ทั้งหมด</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-pending" style="color:#FF9800">0</div>
+      <div class="queue-summary-label">⏳ รอ</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-called" style="color:#2196F3">0</div>
+      <div class="queue-summary-label">📢 เรียก</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-serving" style="color:#9C27B0">0</div>
+      <div class="queue-summary-label">⛽ บริการ</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-completed" style="color:#4CAF50">0</div>
+      <div class="queue-summary-label">✅ เสร็จ</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-value" id="s-cancelled" style="color:#9E9E9E">0</div>
+      <div class="queue-summary-label">❌ ยกเลิก</div>
+    </div>
+  </div>
+
+  <!-- Auto-cancel info bar -->
+  <div id="autocancelbar" style="display:none;
+    background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.35);
+    border-radius:var(--radius-sm);padding:0.65rem 1rem;margin-bottom:1rem;
+    font-size:0.8rem;color:#FFB74D;display:flex;align-items:center;gap:0.5rem">
+    ⏰ คิวที่ถูกเรียกแล้วเกิน 10 นาทีและไม่มารับบริการจะถูกยกเลิกอัตโนมัติ
+    <span id="autocancelbar-count" style="font-weight:700;background:rgba(255,152,0,0.2);padding:0.15rem 0.5rem;border-radius:99px"></span>
+  </div>
+
+  <!-- Main content: Active queues + Completed -->
+  <div id="no-station-msg" style="text-align:center;padding:4rem;color:var(--text-muted)">
+    กรุณาเลือกปั๊มน้ำมันด้านบน
+  </div>
+
+  <div id="queue-board" style="display:none">
+
+    <!-- Active queues -->
+    <div id="active-section">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+        <h2 style="font-size:0.9rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.08em">
+          🔴 คิวที่ยังดำเนินการ
+        </h2>
+        <span id="active-count-badge" class="badge badge-warning">0</span>
+      </div>
+      <div id="active-list" style="display:grid;gap:0.6rem;margin-bottom:1.5rem"></div>
+    </div>
+
+    <!-- Done queues -->
+    <div id="done-section">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;cursor:pointer" onclick="toggleDoneSection()">
+        <h2 style="font-size:0.9rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em">
+          เสร็จสิ้น / ยกเลิก
+        </h2>
+        <span id="done-count-badge" class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-muted)">0</span>
+        <span id="done-toggle-icon" style="margin-left:auto;color:var(--text-muted);font-size:0.8rem">▼ ซ่อน</span>
+      </div>
+      <div id="done-list" style="display:grid;gap:0.5rem"></div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" style="display:none;text-align:center;padding:3.5rem;background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius)">
+    <div style="font-size:3rem;margin-bottom:0.75rem">🎫</div>
+    <p style="color:var(--text-muted)">ยังไม่มีคิววันนี้</p>
+  </div>
+
+</div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+/* =====================================================
+   QUEUE OWNER PAGE
+   - Real-time Firestore listener
+   - Auto-cancel: called queue not served within 10 min
+   - Manual: call / serve / complete / cancel buttons
+===================================================== */
+
+const AUTO_CANCEL_MINUTES = 10;
+
+let currentUser     = null;
+let myStations      = [];
+let selectedStId    = null;
+let queueListener   = null;
+let allQueues       = [];
+let soundEnabled    = true;
+let doneSectionOpen = true;
+let autoTimer       = null;   // setInterval handle
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await Auth.requireAuth('login.html');
+  const role  = await DB.getUserRole(currentUser.uid);
+  if (role !== 'operator') { window.location.href = 'my-queues.html'; return; }
+
+  document.getElementById('today-label').textContent =
+    new Date().toLocaleDateString('th-TH', { dateStyle: 'medium' });
+
+  myStations = await DB.getMyStations(currentUser.uid);
+  const sel  = document.getElementById('queue-station-select');
+  myStations.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    sel.appendChild(o);
+  });
+
+  // Auto-select single station
+  if (myStations.length === 1) {
+    sel.value = myStations[0].id;
+    sel.dispatchEvent(new Event('change'));
+  }
+
+  sel.addEventListener('change', () => {
+    if (queueListener) { queueListener(); queueListener = null; }
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    selectedStId = sel.value || null;
+    if (selectedStId) {
+      document.getElementById('no-station-msg').style.display = 'none';
+      queueListener = DB.listenStationQueues(selectedStId, onQueuesUpdate);
+      // Auto-cancel timer runs every 30s
+      autoTimer = setInterval(runAutoCancelCheck, 30000);
+    } else {
+      document.getElementById('no-station-msg').style.display = '';
+      document.getElementById('queue-board').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'none';
+      allQueues = [];
+    }
+  });
+
+  // Sound toggle
+  document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    document.getElementById('btn-sound-toggle').textContent = soundEnabled ? '🔔' : '🔕';
+    Toast.show(soundEnabled ? '🔔 เปิดเสียงแจ้งเตือน' : '🔕 ปิดเสียงเสียงแจ้งเตือน', 'info');
+  });
+});
+
+/* ---- Real-time callback ---- */
+let prevPendingCount = 0;
+
+function onQueuesUpdate(queues) {
+  allQueues = queues;
+  renderBoard();
+  updateSummary();
+
+  // Sound alert when new pending queue arrives
+  const pendingNow = queues.filter(q => q.status === 'pending').length;
+  if (pendingNow > prevPendingCount && soundEnabled) playBeep();
+  prevPendingCount = pendingNow;
+}
+
+/* ---- Render board ---- */
+function renderBoard() {
+  const active = allQueues.filter(q => ['pending','called','serving'].includes(q.status));
+  const done   = allQueues.filter(q => ['completed','cancelled'].includes(q.status));
+
+  const board  = document.getElementById('queue-board');
+  const empty  = document.getElementById('empty-state');
+
+  if (!allQueues.length) {
+    board.style.display = 'none'; empty.style.display = '';
+    return;
+  }
+  board.style.display = ''; empty.style.display = 'none';
+
+  document.getElementById('active-count-badge').textContent = active.length;
+  document.getElementById('done-count-badge').textContent   = done.length;
+
+  document.getElementById('active-list').innerHTML =
+    active.length
+      ? active.map(q => queueCard(q)).join('')
+      : '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);background:var(--bg-card);border-radius:var(--radius-sm);border:1px dashed var(--border)">ไม่มีคิวที่ยังดำเนินการ</div>';
+
+  document.getElementById('done-list').innerHTML =
+    done.map(q => queueCard(q, true)).join('');
+
+  // Auto-cancel bar
+  const calledQueues = active.filter(q => q.status === 'called');
+  const overdue = calledQueues.filter(q => isOverdue(q));
+  const bar = document.getElementById('autocancelbar');
+  if (overdue.length) {
+    bar.style.display = 'flex';
+    document.getElementById('autocancelbar-count').textContent = `${overdue.length} คิวเกินเวลา`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+/* ---- Queue card ---- */
+function queueCard(q, isDone = false) {
+  const info = DB.getQueueStatusInfo(q.status);
+  const fuel = DB.FUEL_TYPES.find(f => f.key === q.fuelType);
+  const over = !isDone && q.status === 'called' && isOverdue(q);
+  const elapsed = q.updatedAt ? getElapsedMinutes(q.updatedAt) : null;
+
+  // Overdue glow
+  const borderColor = over ? '#FF5722' : isDone ? 'var(--border)' : (info.color + '44');
+  const glowStyle   = over ? 'box-shadow:0 0 0 2px #FF572244;animation:pulse-border 1.5s infinite;' : '';
+
+  let actions = '';
+  if (q.status === 'pending') {
+    actions = `
+      <button class="btn-status btn-status-call" onclick="updateStatus('${q.id}','called')">📢 เรียกคิว</button>
+      <button class="btn-status btn-status-cancel" onclick="confirmCancel('${q.id}','${escHtml(q.customerName)}')">❌ ยกเลิก</button>`;
+  } else if (q.status === 'called') {
+    actions = `
+      <button class="btn-status btn-status-serve" onclick="updateStatus('${q.id}','serving')">⛽ เริ่มเติม</button>
+      <button class="btn-status btn-status-cancel" onclick="confirmCancel('${q.id}','${escHtml(q.customerName)}')">❌ ยกเลิก</button>`;
+  } else if (q.status === 'serving') {
+    actions = `
+      <button class="btn-status btn-status-done" onclick="updateStatus('${q.id}','completed')">✅ เสร็จสิ้น</button>`;
+  }
+
+  const overdueTag = over
+    ? `<span style="background:#FF572222;color:#FF5722;border:1px solid #FF572244;font-size:0.68rem;padding:0.15rem 0.4rem;border-radius:4px;font-weight:700">
+        ⏰ เกิน ${Math.floor(elapsed)} นาที
+       </span>`
+    : elapsed !== null && !isDone
+      ? `<span style="font-size:0.7rem;color:var(--text-muted)">${Math.floor(elapsed)} นาที</span>`
+      : '';
+
+  return `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;
+                background:var(--bg-card);border:1px solid ${borderColor};
+                border-radius:var(--radius-sm);${glowStyle}${isDone ? 'opacity:0.65;' : ''}">
+
+      <div class="queue-row-number q-${q.status}">${q.queueNumber}</div>
+
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:0.9rem">${escHtml(q.customerName)}</span>
+          <span class="queue-status-badge ${info.badgeClass}" style="font-size:0.68rem">${info.icon} ${info.label}</span>
+          ${overdueTag}
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem">
+          <span class="queue-fuel-tag" style="background:${fuel?.color||'#C9A227'}22;color:${fuel?.color||'#C9A227'};border:1px solid ${fuel?.color||'#C9A227'}44;font-size:0.72rem">
+            ⛽ ${q.fuelLabel}
+          </span>
+          ${q.note ? `<span style="font-size:0.72rem;color:var(--text-muted)">📝 ${escHtml(q.note)}</span>` : ''}
+        </div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem">
+          จอง: ${formatTimestamp(q.createdAt)}
+        </div>
+      </div>
+
+      ${!isDone ? `<div class="status-action-row">${actions}</div>` : ''}
+    </div>`;
+}
+
+/* ---- Summary ---- */
+function updateSummary() {
+  const s = { total:0, pending:0, called:0, serving:0, completed:0, cancelled:0 };
+  allQueues.forEach(q => { s.total++; s[q.status] = (s[q.status]||0) + 1; });
+  ['total','pending','called','serving','completed','cancelled'].forEach(k =>
+    document.getElementById('s-' + k).textContent = s[k] || 0
+  );
+}
+
+/* ---- Auto-cancel logic ---- */
+function isOverdue(q) {
+  if (!q.updatedAt) return false;
+  return getElapsedMinutes(q.updatedAt) >= AUTO_CANCEL_MINUTES;
+}
+
+function getElapsedMinutes(ts) {
+  const d = ts && ts.toDate ? ts.toDate() : new Date(ts);
+  return (Date.now() - d.getTime()) / 60000;
+}
+
+async function runAutoCancelCheck() {
+  const calledQueues = allQueues.filter(q => q.status === 'called' && isOverdue(q));
+  for (const q of calledQueues) {
+    await DB.updateQueueStatus(q.id, 'cancelled', currentUser.uid);
+    Toast.show(`⏰ คิว #${q.queueNumber} ${q.customerName} ยกเลิกอัตโนมัติ (เกิน ${AUTO_CANCEL_MINUTES} นาที)`, 'warning');
+  }
+}
+
+/* ---- Update status ---- */
+async function updateStatus(queueId, status) {
+  const r = await DB.updateQueueStatus(queueId, status, currentUser.uid);
+  if (r.success) {
+    const info = DB.getQueueStatusInfo(status);
+    Toast.show(`${info.icon} "${info.label}" แล้ว`, 'success');
+    if (soundEnabled && status === 'called') playBeep(2);
+  } else {
+    Toast.show('❌ ' + r.error, 'error');
+  }
+}
+
+/* ---- Confirm cancel ---- */
+async function confirmCancel(queueId, name) {
+  const ok = await confirmDialog(`ยืนยันยกเลิกคิวของ "${name}" ?`);
+  if (!ok) return;
+  const r = await DB.updateQueueStatus(queueId, 'cancelled', currentUser.uid);
+  if (r.success) Toast.show('❌ ยกเลิกคิวแล้ว', 'info');
+  else Toast.show('❌ ' + r.error, 'error');
+}
+
+/* ---- Toggle done section ---- */
+function toggleDoneSection() {
+  doneSectionOpen = !doneSectionOpen;
+  document.getElementById('done-list').style.display = doneSectionOpen ? 'grid' : 'none';
+  document.getElementById('done-toggle-icon').textContent = doneSectionOpen ? '▼ ซ่อน' : '▶ แสดง';
+}
+
+/* ---- Beep sound ---- */
+function playBeep(times = 1) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (let i = 0; i < times; i++) {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+      }, i * 350);
+    }
+  } catch {}
+}
+
+/* ---- Helpers ---- */
+function escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '–';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+}
+
+/* confirmDialog from app.js */
+function confirmDialog(msg) {
+  return new Promise(resolve => {
+    if (typeof window.confirmDialog === 'function') return resolve(window.confirmDialog(msg));
+    resolve(confirm(msg));
+  });
+}
+</script>
+
+<style>
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 2px #FF572244; }
+  50%      { box-shadow: 0 0 0 4px #FF572288; }
+}
+</style>
+
+</body>
+</html>
